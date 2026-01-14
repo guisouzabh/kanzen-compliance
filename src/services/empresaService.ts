@@ -1,30 +1,36 @@
-import { pool } from '../config/db';
 import { Empresa } from '../types/Empresa';
 import { logChange } from './auditService';
+import { tenantQuery, tenantExecute } from '../db/tenantDb'
 
-// Lista todas as empresas
-export async function listarEmpresasService(): Promise<Empresa[]> {
-  const [rows] = await pool.query('SELECT * FROM empresas');
-  return rows as Empresa[];
+// Lista todas as empresas do tenant
+export async function listarEmpresasService(tenantId: number): Promise<Empresa[]> {
+  const rows = await tenantQuery<Empresa>(
+    tenantId,
+    'SELECT * FROM empresas WHERE tenant_id = ?'
+  );
+  return rows;
 }
 
-// Cria empresa
-export async function criarEmpresaService(dados: Empresa): Promise<Empresa> {
+// Cria empresa para um tenant
+export async function criarEmpresaService(
+  dados: Empresa,
+  tenantId: number
+): Promise<Empresa> {
   const { nome, cnpj, matriz_ou_filial, razao_social } = dados;
 
   const sql = `
-    INSERT INTO empresas (nome, cnpj, matriz_ou_filial, razao_social)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO empresas (tenant_id, nome, cnpj, matriz_ou_filial, razao_social)
+    VALUES (?, ?, ?, ?, ?)
   `;
 
-  const [result] = await pool.query(sql, [
+  const result = await tenantExecute(tenantId, sql, [
     nome,
     cnpj,
     matriz_ou_filial,
     razao_social
   ]);
 
-  await logChange('Empresa','CREATE', dados);
+  await logChange('Empresa', 'CREATE', { tenantId, ...dados });
 
   return {
     id: (result as any).insertId,
@@ -35,33 +41,45 @@ export async function criarEmpresaService(dados: Empresa): Promise<Empresa> {
   };
 }
 
-// Busca empresa por ID
-export async function obterEmpresaPorIdService(id: number): Promise<Empresa | null> {
-  const [rows] = await pool.query('SELECT * FROM empresas WHERE id = ?', [id]);
-  const empresas = rows as Empresa[];
+// Busca empresa por ID dentro do tenant
+export async function obterEmpresaPorIdService(
+  id: number,
+  tenantId: number
+): Promise<Empresa | null> {
+  const rows = await tenantQuery<Empresa>(
+    tenantId,
+    'SELECT * FROM empresas WHERE tenant_id = ? AND id = ?',
+    [id]
+  );
 
-  if (!empresas.length) return null;
+  if (!rows.length) return null;
 
-  await logChange('Empresa','INFO', `consulta por id: ${id}`);
+  await logChange('Empresa', 'INFO', { tenantId, message: `consulta por id: ${id}` });
 
-  return empresas[0];
+  return rows[0];
 }
 
-// Atualiza empresa
-export async function atualizarEmpresaService(id: number, dados: Empresa): Promise<Empresa | null> {
+// Atualiza empresa do tenant
+export async function atualizarEmpresaService(
+  id: number,
+  dados: Empresa,
+  tenantId: number
+): Promise<Empresa | null> {
   const { nome, cnpj, matriz_ou_filial, razao_social } = dados;
 
   const sql = `
     UPDATE empresas
-    SET nome = ?, cnpj = ?, matriz_ou_filial = ?, razao_social = ?
-    WHERE id = ?
+       SET nome = ?, cnpj = ?, matriz_ou_filial = ?, razao_social = ?
+     WHERE tenant_id = ? AND id = ?
   `;
 
-  const [result] = await pool.query(sql, [
+  const result = await tenantExecute(tenantId, sql, [
     nome,
     cnpj,
     matriz_ou_filial,
     razao_social,
+    // params extra (depois do tenantId que o wrapper injeta)
+    tenantId,
     id
   ]);
 
@@ -70,7 +88,7 @@ export async function atualizarEmpresaService(id: number, dados: Empresa): Promi
     return null;
   }
 
-  await logChange('Empresa','UPDATE', result);
+  await logChange('Empresa', 'UPDATE', { tenantId, id, dados });
 
   return {
     id,
@@ -81,12 +99,17 @@ export async function atualizarEmpresaService(id: number, dados: Empresa): Promi
   };
 }
 
-// Deleta empresa
-export async function deletarEmpresaService(id: number): Promise<boolean> {
-  const [result] = await pool.query('DELETE FROM empresas WHERE id = ?', [id]);
+// Deleta empresa do tenant
+export async function deletarEmpresaService(
+  id: number,
+  tenantId: number
+): Promise<boolean> {
+  const sql = 'DELETE FROM empresas WHERE tenant_id = ? AND id = ?';
+
+  const result = await tenantExecute(tenantId, sql, [id]);
   const { affectedRows } = result as any;
 
-  await logChange('Empresa','DELETE', 'id:' + id);
+  await logChange('Empresa', 'DELETE', { tenantId, id });
 
   return !!affectedRows;
 }

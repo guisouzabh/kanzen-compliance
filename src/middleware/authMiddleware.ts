@@ -10,6 +10,8 @@ export interface AuthRequest extends Request {
     email: string;
     nome: string;
     tenantId: number;
+    empresaId?: number | null;
+    areaId?: number | null;
   };
 }
 
@@ -33,7 +35,9 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
     id: decoded.sub,
     email: decoded.email,
     nome: decoded.nome,
-    tenantId: decoded.tenantId
+    tenantId: decoded.tenantId,
+    empresaId: decoded.empresaId ?? null,
+    areaId: decoded.areaId ?? null
   };
 
     return next();

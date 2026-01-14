@@ -5,4 +5,6 @@ export interface Usuario {
   senha?: string;      // só na entrada
   senha_hash?: string; // vindo do banco
   tenant_id?: number;
+  empresa_id?: number | null;
+  area_id?: number | null;
 }

@@ -7,74 +7,70 @@ import {
   deletarEmpresaService
 } from '../services/empresaService';
 import { AppError } from '../errors/AppError';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { empresaSchema, EmpresaInput } from '../validation/empresaSchema';
+import { AuthRequest } from '../middleware/authMiddleware';
 
-export async function listarEmpresas(req: Request, res: Response) {
-  try {
-    const empresas = await listarEmpresasService();
-    res.json(empresas);
-  } catch (err) {
-    console.error('Erro ao listar empresas:', err);
-    res.status(500).json({ erro: 'Erro interno ao listar empresas.' });
+// LISTAR
+export async function listarEmpresas(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const empresas = await listarEmpresasService(tenantId);
+  return res.json(empresas);
+}
+
+// CRIAR
+export async function criarEmpresa(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const parseResult = empresaSchema.safeParse(req.body);
+
+  if (!parseResult.success) {
+    return res.status(400).json({
+      erro: 'Dados inválidos',
+      detalhes: parseResult.error.issues
+    });
   }
+
+  const dados: EmpresaInput = parseResult.data;
+  const nova = await criarEmpresaService(dados, tenantId);
+  return res.status(201).json(nova);
 }
 
-export async function criarEmpresa(req: Request, res: Response) {
-  try {
-    const parseResult = empresaSchema.safeParse(req.body);
-
-    if (!parseResult.success) {
-      return res.status(400).json({
-        erro: 'Dados inválidos',
-        detalhes: parseResult.error.issues
-      });
-    }
-
-    const dados: EmpresaInput = parseResult.data;
-
-    const novaEmpresa = await criarEmpresaService(dados);
-
-    res.status(201).json(novaEmpresa);
-  } catch (err) {
-    console.error('Erro ao criar empresa:', err);
-    res.status(500).json({ erro: 'Erro interno ao criar empresa.' });
-  }
-}
-
-export async function atualizarEmpresa(req: Request, res: Response) {
-    const id = Number(req.params.id);
-    if (Number.isNaN(id)) {
-      throw new AppError('ID inválido', 400);
-    }
-
-    const parseResult = empresaSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      return res.status(400).json({
-        erro: 'Dados inválidos',
-        detalhes: parseResult.error.issues
-      });
-    }
-
-    const dados: EmpresaInput = parseResult.data;
-
-    const empresaAtualizada = await atualizarEmpresaService(id, dados);
-
-    if (!empresaAtualizada) {
-      throw new AppError('ID inválido', 404);
-    }
-
-    res.json(empresaAtualizada);
-}
-
-
-export async function obterEmpresaPorId(req: Request, res: Response) {
+// ATUALIZAR
+export async function atualizarEmpresa(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
     throw new AppError('ID inválido', 400);
   }
 
-  const empresa = await obterEmpresaPorIdService(id);
+  const parseResult = empresaSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({
+      erro: 'Dados inválidos',
+      detalhes: parseResult.error.issues
+    });
+  }
+
+  const dados: EmpresaInput = parseResult.data;
+
+  const empresaAtualizada = await atualizarEmpresaService(id, dados, tenantId);
+
+  if (!empresaAtualizada) {
+    throw new AppError('ID inválido', 404);
+  }
+
+  return res.json(empresaAtualizada);
+}
+
+// OBTER POR ID
+export async function obterEmpresaPorId(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    throw new AppError('ID inválido', 400);
+  }
+
+  const empresa = await obterEmpresaPorIdService(id, tenantId);
 
   if (!empresa) {
     throw new AppError('Empresa não encontrada', 404);
@@ -83,16 +79,18 @@ export async function obterEmpresaPorId(req: Request, res: Response) {
   return res.json(empresa);
 }
 
-export async function deletarEmpresa(req: Request, res: Response) {
-    const id = Number(req.params.id);
-    if (Number.isNaN(id)) {
-      throw new AppError('ID inválido', 400);
-    }
+// DELETAR
+export async function deletarEmpresa(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    throw new AppError('ID inválido', 400);
+  }
 
-    const ok = await deletarEmpresaService(id);
-    if (!ok) {
-      throw new AppError('ID inválido', 404);
-    }
+  const ok = await deletarEmpresaService(id, tenantId);
+  if (!ok) {
+    throw new AppError('ID inválido', 404);
+  }
 
-    res.status(204).send();
+  return res.status(204).send();
 }

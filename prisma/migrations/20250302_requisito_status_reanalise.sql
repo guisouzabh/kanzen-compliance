@@ -1,0 +1,6 @@
+-- Adiciona novo status 'EM_REANALISE' em requisitos e requisito_checkins
+ALTER TABLE requisitos
+  MODIFY COLUMN status ENUM('CONFORME', 'NAO_CONFORME', 'EM_ANALISE', 'SEM_ANALISE', 'EM_REANALISE') NOT NULL;
+
+ALTER TABLE requisito_checkins
+  MODIFY COLUMN status ENUM('CONFORME', 'NAO_CONFORME', 'EM_ANALISE', 'SEM_ANALISE', 'EM_REANALISE') NOT NULL;
