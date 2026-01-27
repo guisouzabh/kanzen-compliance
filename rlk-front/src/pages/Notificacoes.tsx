@@ -212,7 +212,7 @@ function Notificacoes() {
           <Table
             rowKey="id"
             dataSource={notificacoes}
-            pagination={{ pageSize: 10 }}
+            pagination={{ pageSize: 10, showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}` }}
             size="middle"
             expandable={{
               expandedRowRender: (record) => (

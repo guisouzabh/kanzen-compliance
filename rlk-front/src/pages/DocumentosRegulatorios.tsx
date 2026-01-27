@@ -47,6 +47,7 @@ interface DocumentoRegulatorio {
   orgao_emissor?: string | null;
   obrigatoriedade: Obrigatoriedade;
   periodicidade: Periodicidade;
+  impacto?: number;
   exige_responsavel_tecnico?: boolean;
   exige_assinatura?: boolean;
   exige_validade?: boolean;
@@ -67,6 +68,15 @@ const periodicidadeOptions = [
   { value: 'TRIENAL', label: 'Trienal' },
   { value: 'QUINQUENAL', label: 'Quinquenal' },
   { value: 'EVENTUAL', label: 'Eventual' }
+];
+
+const impactoOptions = [
+  { value: 5, label: '5 - Crítico' },
+  { value: 4, label: '4 - Alto' },
+  { value: 3, label: '3 - Importante' },
+  { value: 2, label: '2 - Operacional' },
+  { value: 1, label: '1 - Governança' },
+  { value: 0, label: '0 - Ausente' }
 ];
 
 function DocumentosRegulatorios() {
@@ -113,6 +123,7 @@ function DocumentosRegulatorios() {
       orgao_emissor: doc.orgao_emissor ?? undefined,
       obrigatoriedade: doc.obrigatoriedade,
       periodicidade: doc.periodicidade,
+      impacto: doc.impacto ?? 3,
       exige_responsavel_tecnico: doc.exige_responsavel_tecnico ?? false,
       exige_assinatura: doc.exige_assinatura ?? false,
       exige_validade: doc.exige_validade ?? true,
@@ -139,6 +150,7 @@ function DocumentosRegulatorios() {
         exige_responsavel_tecnico: values.exige_responsavel_tecnico ?? false,
         exige_assinatura: values.exige_assinatura ?? false,
         exige_validade: values.exige_validade ?? true,
+        impacto: values.impacto ?? 3,
         ativo: values.ativo ?? true
       };
 
@@ -213,7 +225,7 @@ function DocumentosRegulatorios() {
             <Table
               rowKey="id"
               dataSource={documentos}
-              pagination={{ pageSize: 10 }}
+              pagination={{ pageSize: 10, showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}` }}
               size="middle"
               columns={[
                 {
@@ -253,6 +265,13 @@ function DocumentosRegulatorios() {
                   title: 'Periodicidade',
                   dataIndex: 'periodicidade',
                   render: (value: Periodicidade) => <Tag color="blue">{value}</Tag>
+                },
+                {
+                  title: 'Impacto',
+                  dataIndex: 'impacto',
+                  render: (value?: number) => (
+                    <Tag color="purple">{value ?? 3}</Tag>
+                  )
                 },
                 {
                   title: 'Ativo',
@@ -311,6 +330,7 @@ function DocumentosRegulatorios() {
         <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{
           obrigatoriedade: 'OBRIGATORIO',
           periodicidade: 'ANUAL',
+          impacto: 3,
           exige_responsavel_tecnico: false,
           exige_assinatura: false,
           exige_validade: true,
@@ -372,6 +392,14 @@ function DocumentosRegulatorios() {
               style={{ minWidth: 200, flex: 1 }}
             >
               <Select options={periodicidadeOptions} />
+            </Form.Item>
+            <Form.Item
+              label="Impacto"
+              name="impacto"
+              rules={[{ required: true, message: 'Selecione o impacto' }]}
+              style={{ minWidth: 200, flex: 1 }}
+            >
+              <Select options={impactoOptions} />
             </Form.Item>
           </Space>
 

@@ -7,4 +7,5 @@ export interface Usuario {
   tenant_id?: number;
   empresa_id?: number | null;
   area_id?: number | null;
+  role?: 'GESTOR' | 'COLABORADOR' | 'USUARIO_TAREFA';
 }

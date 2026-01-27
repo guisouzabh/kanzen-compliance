@@ -177,6 +177,74 @@ export async function listarRequisitosService(tenantId: number): Promise<Requisi
   }));
 }
 
+export async function listarRequisitosPorUsuarioService(
+  tenantId: number,
+  usuarioId: number
+): Promise<Requisito[]> {
+  const requisitos = await tenantQuery<Requisito & {
+    area_responsavel_nome: string;
+    usuario_responsavel_nome: string | null;
+    classificacao_nome: string | null;
+  }>(
+    tenantId,
+    `
+      SELECT r.*, a.nome AS area_responsavel_nome, u.nome AS usuario_responsavel_nome, c.nome AS classificacao_nome
+        FROM requisitos r
+        JOIN areas a ON a.id = r.area_responsavel_id AND a.tenant_id = r.tenant_id
+        LEFT JOIN usuarios u ON u.id = r.usuario_responsavel_id AND u.tenant_id = r.tenant_id
+        LEFT JOIN classificacoes c ON c.id = r.classificacao_id AND c.tenant_id = r.tenant_id
+       WHERE r.tenant_id = ?
+         AND (
+           r.usuario_responsavel_id = ?
+           OR EXISTS (
+             SELECT 1
+               FROM requisito_tarefas t
+              WHERE t.tenant_id = r.tenant_id
+                AND t.requisito_id = r.id
+                AND t.responsavel_id = ?
+           )
+         )
+       ORDER BY r.id DESC
+    `,
+    [usuarioId, usuarioId]
+  );
+
+  const ids = requisitos.map((r) => r.id!).filter(Boolean);
+  const [tagsMap, outrasAreasMap] = await Promise.all([
+    buscarTagsMap(tenantId, ids),
+    buscarOutrasAreasMap(tenantId, ids)
+  ]);
+
+  return requisitos.map((r) => ({
+    ...r,
+    tags: tagsMap[r.id!] || [],
+    outras_areas_ids: outrasAreasMap[r.id!]?.ids || [],
+    outras_areas_nomes: outrasAreasMap[r.id!]?.nomes || []
+  }));
+}
+
+export async function usuarioTemAcessoRequisito(
+  tenantId: number,
+  requisitoId: number,
+  usuarioId: number
+): Promise<boolean> {
+  const rows = await tenantQuery<{ id: number }>(
+    tenantId,
+    `
+      SELECT r.id
+        FROM requisitos r
+        LEFT JOIN requisito_tarefas t
+          ON t.requisito_id = r.id AND t.tenant_id = r.tenant_id
+       WHERE r.tenant_id = ? AND r.id = ?
+         AND (r.usuario_responsavel_id = ? OR t.responsavel_id = ?)
+       LIMIT 1
+    `,
+    [requisitoId, usuarioId, usuarioId]
+  );
+
+  return rows.length > 0;
+}
+
 // Cria requisito
 export async function criarRequisitoService(
   dados: Requisito,

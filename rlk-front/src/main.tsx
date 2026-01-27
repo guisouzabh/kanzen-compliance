@@ -14,6 +14,15 @@ import Subarea2 from './pages/Subarea2';
 import Hierarquia from './pages/Hierarquia';
 import Notificacoes from './pages/Notificacoes';
 import DocumentosRegulatorios from './pages/DocumentosRegulatorios';
+import DocumentosEmpresa from './pages/DocumentosEmpresa';
+import DocumentoConteudo from './pages/DocumentoConteudo';
+import DocumentosModeloSecoes from './pages/DocumentosModeloSecoes';
+import DocumentosConteudoSecoes from './pages/DocumentosConteudoSecoes';
+import AssistenteSecoes from './pages/AssistenteSecoes';
+import InventarioDados from './pages/InventarioDados';
+import CategoriasDados from './pages/CategoriasDados';
+import LgpdMapa from './pages/LgpdMapa';
+import Processos from './pages/Processos';
 import NovoRequisito from './pages/NovoRequisito';
 import { EmpresaProvider } from './contexts/EmpresaContext';
 import MainLayout from './layouts/MainLayout';
@@ -55,6 +64,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="/hierarquia" element={<Hierarquia />} />
                   <Route path="/notificacoes" element={<Notificacoes />} />
                   <Route path="/documentos-regulatorios" element={<DocumentosRegulatorios />} />
+                  <Route path="/documentos-empresa" element={<DocumentosEmpresa />} />
+                  <Route path="/documento-conteudo" element={<DocumentoConteudo />} />
+                  <Route path="/documentos-modelo-secoes" element={<DocumentosModeloSecoes />} />
+                  <Route path="/documentos-conteudo-secoes" element={<DocumentosConteudoSecoes />} />
+                  <Route path="/assistente-secoes" element={<AssistenteSecoes />} />
+                  <Route path="/inventario-dados" element={<InventarioDados />} />
+                  <Route path="/categorias-dados" element={<CategoriasDados />} />
+                  <Route path="/processos" element={<Processos />} />
+                  <Route path="/lgpd-mapa" element={<LgpdMapa />} />
                   <Route path="/usuarios" element={<Usuarios />} />
                   <Route path="/requisitos/novo" element={<NovoRequisito />} />
                   <Route path="/requisitos" element={<Requisitos />} />

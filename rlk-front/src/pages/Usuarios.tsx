@@ -44,6 +44,7 @@ interface Usuario {
   email: string;
   empresa_id?: number | null;
   area_id?: number | null;
+  role?: 'GESTOR' | 'COLABORADOR' | 'USUARIO_TAREFA';
 }
 
 interface UsuarioFormValues {
@@ -52,6 +53,7 @@ interface UsuarioFormValues {
   senha: string;
   empresa_id?: number | null;
   area_id?: number | null;
+  role?: 'GESTOR' | 'COLABORADOR' | 'USUARIO_TAREFA';
 }
 
 function Usuarios() {
@@ -112,7 +114,8 @@ function Usuarios() {
       await api.post('/usuarios', {
         ...values,
         empresa_id: values.empresa_id || null,
-        area_id: values.area_id || null
+        area_id: values.area_id || null,
+        role: values.role || 'COLABORADOR'
       });
       message.success('Usuário criado');
       fecharModal();
@@ -185,6 +188,15 @@ function Usuarios() {
                     </Space>
                   );
                 }
+              },
+              {
+                title: 'Perfil',
+                dataIndex: 'role',
+                render: (value?: Usuario['role']) => (
+                  <Tag color={value === 'GESTOR' ? 'green' : value === 'USUARIO_TAREFA' ? 'gold' : 'blue'}>
+                    {value || 'COLABORADOR'}
+                  </Tag>
+                )
               }
             ]}
           />
@@ -206,7 +218,7 @@ function Usuarios() {
         onOk={() => form.submit()}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ role: 'COLABORADOR' }}>
           <Form.Item
             label="Nome"
             name="nome"
@@ -229,6 +241,20 @@ function Usuarios() {
             rules={[{ required: true, min: 6, message: 'Senha mínima de 6 caracteres' }]}
           >
             <Input.Password placeholder="Senha" />
+          </Form.Item>
+
+          <Form.Item
+            label="Perfil"
+            name="role"
+            rules={[{ required: true, message: 'Selecione o perfil' }]}
+          >
+            <Select
+              options={[
+                { value: 'GESTOR', label: 'Gestor' },
+                { value: 'COLABORADOR', label: 'Colaborador' },
+                { value: 'USUARIO_TAREFA', label: 'Usuário tarefa' }
+              ]}
+            />
           </Form.Item>
 
           <Form.Item label="Empresa" name="empresa_id">

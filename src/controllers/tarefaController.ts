@@ -7,6 +7,7 @@ import {
   atualizarStatusTarefaService
 } from '../services/tarefaService';
 import { AppError } from '../errors/AppError';
+import { usuarioTemAcessoRequisito } from '../services/requisitoService';
 
 export async function listarTarefas(req: AuthRequest, res: Response) {
   const tenantId = req.usuario!.tenantId;
@@ -14,6 +15,13 @@ export async function listarTarefas(req: AuthRequest, res: Response) {
 
   if (Number.isNaN(requisitoId)) {
     throw new AppError('ID inválido', 400);
+  }
+
+  if (req.usuario?.role === 'USUARIO_TAREFA') {
+    const permitido = await usuarioTemAcessoRequisito(tenantId, requisitoId, req.usuario.id);
+    if (!permitido) {
+      throw new AppError('Acesso negado', 403);
+    }
   }
 
   const tarefas = await listarTarefasService(requisitoId, tenantId);
@@ -26,6 +34,13 @@ export async function criarTarefa(req: AuthRequest, res: Response) {
 
   if (Number.isNaN(requisitoId)) {
     throw new AppError('ID inválido', 400);
+  }
+
+  if (req.usuario?.role === 'USUARIO_TAREFA') {
+    const permitido = await usuarioTemAcessoRequisito(tenantId, requisitoId, req.usuario.id);
+    if (!permitido) {
+      throw new AppError('Acesso negado', 403);
+    }
   }
 
   const parse = requisitoTarefaSchema.safeParse(req.body);
@@ -45,6 +60,13 @@ export async function atualizarTarefa(req: AuthRequest, res: Response) {
 
   if (Number.isNaN(requisitoId) || Number.isNaN(tarefaId)) {
     throw new AppError('ID inválido', 400);
+  }
+
+  if (req.usuario?.role === 'USUARIO_TAREFA') {
+    const permitido = await usuarioTemAcessoRequisito(tenantId, requisitoId, req.usuario.id);
+    if (!permitido) {
+      throw new AppError('Acesso negado', 403);
+    }
   }
 
   const { status } = req.body as { status?: 'ABERTO' | 'FECHADO' };

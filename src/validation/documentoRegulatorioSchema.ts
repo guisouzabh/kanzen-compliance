@@ -9,6 +9,12 @@ export const documentoRegulatorioSchema = z.object({
   orgao_emissor: z.string().max(255, 'Órgão emissor muito longo').optional().nullable(),
   obrigatoriedade: z.enum(['OBRIGATORIO', 'CONDICIONAL']),
   periodicidade: z.enum(['UNICO', 'ANUAL', 'BIENAL', 'TRIENAL', 'QUINQUENAL', 'EVENTUAL']),
+  impacto: z
+    .number()
+    .int()
+    .min(0, 'Impacto deve ser entre 0 e 5')
+    .max(5, 'Impacto deve ser entre 0 e 5')
+    .default(3),
   exige_responsavel_tecnico: z.boolean().optional().default(false),
   exige_assinatura: z.boolean().optional().default(false),
   exige_validade: z.boolean().optional().default(true),

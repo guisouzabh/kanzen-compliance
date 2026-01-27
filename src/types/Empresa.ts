@@ -6,4 +6,9 @@ export interface Empresa {
   cnpj: string;
   matriz_ou_filial: TipoMatrizOuFilial;
   razao_social: string;
+  cep?: string | null;
+  endereco?: string | null;
+  cidade?: string | null;
+  estado?: string | null;
+  logo_url?: string | null;
 }

@@ -16,18 +16,25 @@ export async function criarEmpresaService(
   dados: Empresa,
   tenantId: number
 ): Promise<Empresa> {
-  const { nome, cnpj, matriz_ou_filial, razao_social } = dados;
+  const { nome, cnpj, matriz_ou_filial, razao_social, cep, endereco, cidade, estado, logo_url } = dados;
 
   const sql = `
-    INSERT INTO empresas (tenant_id, nome, cnpj, matriz_ou_filial, razao_social)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO empresas (
+      tenant_id, nome, cnpj, matriz_ou_filial, razao_social, cep, endereco, cidade, estado, logo_url
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const result = await tenantExecute(tenantId, sql, [
     nome,
     cnpj,
     matriz_ou_filial,
-    razao_social
+    razao_social,
+    cep ?? null,
+    endereco ?? null,
+    cidade ?? null,
+    estado ?? null,
+    logo_url ?? null
   ]);
 
   await logChange('Empresa', 'CREATE', { tenantId, ...dados });
@@ -37,7 +44,12 @@ export async function criarEmpresaService(
     nome,
     cnpj,
     matriz_ou_filial,
-    razao_social
+    razao_social,
+    cep: cep ?? null,
+    endereco: endereco ?? null,
+    cidade: cidade ?? null,
+    estado: estado ?? null,
+    logo_url: logo_url ?? null
   };
 }
 
@@ -65,11 +77,12 @@ export async function atualizarEmpresaService(
   dados: Empresa,
   tenantId: number
 ): Promise<Empresa | null> {
-  const { nome, cnpj, matriz_ou_filial, razao_social } = dados;
+  const { nome, cnpj, matriz_ou_filial, razao_social, cep, endereco, cidade, estado, logo_url } = dados;
 
   const sql = `
     UPDATE empresas
-       SET nome = ?, cnpj = ?, matriz_ou_filial = ?, razao_social = ?
+       SET tenant_id = ?, nome = ?, cnpj = ?, matriz_ou_filial = ?, razao_social = ?,
+           cep = ?, endereco = ?, cidade = ?, estado = ?, logo_url = ?
      WHERE tenant_id = ? AND id = ?
   `;
 
@@ -78,14 +91,18 @@ export async function atualizarEmpresaService(
     cnpj,
     matriz_ou_filial,
     razao_social,
-    // params extra (depois do tenantId que o wrapper injeta)
+    cep ?? null,
+    endereco ?? null,
+    cidade ?? null,
+    estado ?? null,
+    logo_url ?? null,
     tenantId,
     id
   ]);
 
   const { affectedRows } = result as any;
   if (!affectedRows) {
-    return null;
+    return obterEmpresaPorIdService(id, tenantId);
   }
 
   await logChange('Empresa', 'UPDATE', { tenantId, id, dados });
@@ -95,7 +112,12 @@ export async function atualizarEmpresaService(
     nome,
     cnpj,
     matriz_ou_filial,
-    razao_social
+    razao_social,
+    cep: cep ?? null,
+    endereco: endereco ?? null,
+    cidade: cidade ?? null,
+    estado: estado ?? null,
+    logo_url: logo_url ?? null
   };
 }
 

@@ -5,7 +5,7 @@ export async function listarUsuariosService(tenantId: number): Promise<Usuario[]
   return tenantQuery<Usuario>(
     tenantId,
     `
-      SELECT id, nome, email, tenant_id, empresa_id, area_id
+      SELECT id, nome, email, tenant_id, empresa_id, area_id, role
         FROM usuarios
        WHERE tenant_id = ?
        ORDER BY id DESC

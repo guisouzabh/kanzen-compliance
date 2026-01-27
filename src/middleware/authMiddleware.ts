@@ -12,6 +12,7 @@ export interface AuthRequest extends Request {
     tenantId: number;
     empresaId?: number | null;
     areaId?: number | null;
+    role?: 'GESTOR' | 'COLABORADOR' | 'USUARIO_TAREFA';
   };
 }
 
@@ -37,7 +38,8 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
     nome: decoded.nome,
     tenantId: decoded.tenantId,
     empresaId: decoded.empresaId ?? null,
-    areaId: decoded.areaId ?? null
+    areaId: decoded.areaId ?? null,
+    role: decoded.role ?? undefined
   };
 
     return next();

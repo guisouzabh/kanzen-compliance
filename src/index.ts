@@ -16,6 +16,13 @@ import subareaRoutes from './routes/subareaRoutes';
 import subarea2Routes from './routes/subarea2Routes';
 import inboxRoutes from './routes/inboxRoutes';
 import documentoRegulatorioRoutes from './routes/documentoRegulatorioRoutes';
+import documentoEmpresaRoutes from './routes/documentoEmpresaRoutes';
+import documentoConteudoRoutes from './routes/documentoConteudoRoutes';
+import documentoModeloSecaoRoutes from './routes/documentoModeloSecaoRoutes';
+import documentoConteudoSecaoRoutes from './routes/documentoConteudoSecaoRoutes';
+import inventarioDadoRoutes from './routes/inventarioDadoRoutes';
+import categoriaDadoPessoalRoutes from './routes/categoriaDadoPessoalRoutes';
+import processoRoutes from './routes/processoRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -40,6 +47,13 @@ app.use('/api/v1', usuarioRoutes);
 app.use('/api/v1', classificacaoRoutes);
 app.use('/api/v1', inboxRoutes);
 app.use('/api/v1', documentoRegulatorioRoutes);
+app.use('/api/v1', documentoEmpresaRoutes);
+app.use('/api/v1', documentoConteudoRoutes);
+app.use('/api/v1', documentoModeloSecaoRoutes);
+app.use('/api/v1', documentoConteudoSecaoRoutes);
+app.use('/api/v1', inventarioDadoRoutes);
+app.use('/api/v1', categoriaDadoPessoalRoutes);
+app.use('/api/v1', processoRoutes);
 
 app.get('/', (req, res) => {
   res.send('API RLK rodando com backend pro + auth.');

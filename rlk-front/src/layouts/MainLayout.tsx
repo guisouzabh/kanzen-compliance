@@ -37,6 +37,19 @@ function MainLayout() {
     }
   }
 
+  function getUsuarioRoleFromToken() {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    try {
+      const payload = JSON.parse(atob(parts[1]));
+      return typeof payload.role === 'string' ? payload.role : null;
+    } catch {
+      return null;
+    }
+  }
+
   function handleLogout() {
     localStorage.removeItem('token');
     navigate('/login');
@@ -69,6 +82,152 @@ function MainLayout() {
     };
   }, []);
 
+  const usuarioRole = getUsuarioRoleFromToken();
+  const podeGerenciarConfig = !usuarioRole || usuarioRole === 'GESTOR';
+  const podeGerenciarHierarquia = !usuarioRole || usuarioRole === 'GESTOR';
+
+  const menuItems = [
+     {
+      key: 'gestor',
+      icon: <FileTextOutlined />,
+      label: 'Gestor',
+      children: [
+        {
+          key: '/documentos-regulatorios',
+          icon: <FileTextOutlined />,
+          label: <Link to="/documentos-regulatorios">Documentos Regulatórios</Link>
+        },
+        {
+          key: '/documentos-modelo-secoes',
+          icon: <FileTextOutlined />,
+          label: <Link to="/documentos-modelo-secoes">Modelo de Seções</Link>
+        }
+      ]
+    },
+    {
+      key: '/dashboard',
+      icon: <DashboardOutlined />,
+      label: <Link to="/dashboard">Dashboard</Link>
+    },
+    {
+      key: '/requisitos',
+      icon: <AuditOutlined />,
+      label: <Link to="/requisitos">Requisitos</Link>
+    },
+    {
+      key: 'documentos',
+      icon: <FileTextOutlined />,
+      label: 'Documentos',
+      children: [
+        {
+          key: '/documentos-empresa',
+          icon: <FileTextOutlined />,
+          label: <Link to="/documentos-empresa">Documentos da Empresa</Link>
+        },
+        {
+          key: '/documento-conteudo',
+          icon: <FileTextOutlined />,
+          label: <Link to="/documento-conteudo">Documento Conteúdo</Link>
+        },
+        {
+          key: '/documentos-conteudo-secoes',
+          icon: <FileTextOutlined />,
+          label: <Link to="/documentos-conteudo-secoes">Conteúdo por Seção</Link>
+        },
+        {
+          key: '/assistente-secoes',
+          icon: <FileTextOutlined />,
+          label: <Link to="/assistente-secoes">Assistente de Seções</Link>
+        }
+      ]
+    },
+    {
+      key: 'dados-pessoais',
+      icon: <FileTextOutlined />,
+      label: 'Dados Pessoais',
+      children: [
+        {
+          key: '/lgpd-mapa',
+          icon: <FileTextOutlined />,
+          label: <Link to="/lgpd-mapa">Mapa LGPD</Link>
+        },
+        {
+          key: '/inventario-dados',
+          icon: <FileTextOutlined />,
+          label: <Link to="/inventario-dados">Inventário de Dados</Link>
+        },
+        {
+          key: '/categorias-dados',
+          icon: <FileTextOutlined />,
+          label: <Link to="/categorias-dados">Categorias de Dados</Link>
+        },
+        {
+          key: '/processos',
+          icon: <FileTextOutlined />,
+          label: <Link to="/processos">Processos</Link>
+        }
+      ]
+    },
+    podeGerenciarHierarquia
+      ? {
+          key: 'hierarquia',
+          icon: <ClusterOutlined />,
+          label: 'Hierarquia',
+          children: [
+            {
+              key: '/areas',
+              icon: <ClusterOutlined />,
+              label: <Link to="/areas">Áreas</Link>
+            },
+            {
+              key: '/subareas',
+              icon: <NodeIndexOutlined />,
+              label: <Link to="/subareas">Subáreas</Link>
+            },
+            {
+              key: '/subareas2',
+              icon: <NodeIndexOutlined />,
+              label: <Link to="/subareas2">Subárea 2</Link>
+            },
+            {
+              key: '/hierarquia',
+              icon: <ClusterOutlined />,
+              label: <Link to="/hierarquia">Hierarquia</Link>
+            }
+          ]
+        }
+      : null,
+    {
+      key: '/notificacoes',
+      icon: <BellOutlined />,
+      label: <Link to="/notificacoes">Notificações</Link>
+    },
+    podeGerenciarConfig
+      ? {
+          key: 'config',
+          icon: <SettingOutlined />,
+          label: 'Configurações',
+          children: [
+            {
+              key: '/empresas',
+              icon: <ApartmentOutlined />,
+              label: <Link to="/empresas">Empresas</Link>
+            },
+            {
+              key: '/unidades',
+              icon: <DeploymentUnitOutlined />,
+              label: <Link to="/unidades">Unidades</Link>
+            },
+            {
+              key: '/usuarios',
+              icon: <UserOutlined />,
+              label: <Link to="/usuarios">Usuários</Link>
+            }
+          ]
+        }
+      : null
+  ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header
@@ -90,7 +249,7 @@ function MainLayout() {
             />
             <div style={{ lineHeight: 1.1 }}>
               <Typography.Text style={{ color: 'white', fontSize: 18, fontWeight: 700 }}>
-                RLK
+                LegalK
               </Typography.Text>
               <br />
               <Typography.Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>
@@ -104,70 +263,7 @@ function MainLayout() {
             mode="horizontal"
             selectedKeys={[location.pathname]}
             style={{ background: 'transparent' }}
-            items={[
-              {
-                key: '/dashboard',
-                icon: <DashboardOutlined />,
-                label: <Link to="/dashboard">Dashboard</Link>
-              },
-              {
-                key: '/requisitos',
-                icon: <AuditOutlined />,
-                label: <Link to="/requisitos">Requisitos</Link>
-              },
-              {
-                key: '/notificacoes',
-                icon: <BellOutlined />,
-                label: <Link to="/notificacoes">Notificações</Link>
-              },
-              {
-                key: 'config',
-                icon: <SettingOutlined />,
-                label: 'Configurações',
-                children: [
-                  {
-                    key: '/empresas',
-                    icon: <ApartmentOutlined />,
-                    label: <Link to="/empresas">Empresas</Link>
-                  },
-                  {
-                    key: '/unidades',
-                    icon: <DeploymentUnitOutlined />,
-                    label: <Link to="/unidades">Unidades</Link>
-                  },
-                  {
-                    key: '/areas',
-                    icon: <ClusterOutlined />,
-                    label: <Link to="/areas">Áreas</Link>
-                  },
-                  {
-                    key: '/subareas',
-                    icon: <NodeIndexOutlined />,
-                    label: <Link to="/subareas">Subáreas</Link>
-                  },
-                  {
-                    key: '/subareas2',
-                    icon: <NodeIndexOutlined />,
-                    label: <Link to="/subareas2">Subárea 2</Link>
-                  },
-                  {
-                    key: '/hierarquia',
-                    icon: <ClusterOutlined />,
-                    label: <Link to="/hierarquia">Hierarquia</Link>
-                  },
-                  {
-                    key: '/usuarios',
-                    icon: <UserOutlined />,
-                    label: <Link to="/usuarios">Usuários</Link>
-                  },
-                  {
-                    key: '/documentos-regulatorios',
-                    icon: <FileTextOutlined />,
-                    label: <Link to="/documentos-regulatorios">Documentos Regulatórios</Link>
-                  }
-                ]
-              }
-            ]}
+            items={menuItems}
           />
         </Space>
 

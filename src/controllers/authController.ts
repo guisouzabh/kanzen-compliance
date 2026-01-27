@@ -12,7 +12,15 @@ export const registrarUsuario = asyncHandler(async (req: Request, res: Response)
   }
 
   // ➡️ Passe o tenantId para a função de serviço
-  const usuario = await registrarUsuarioService({ nome, email, senha, tenant_id, empresa_id, area_id });
+  const usuario = await registrarUsuarioService({
+    nome,
+    email,
+    senha,
+    tenant_id,
+    empresa_id,
+    area_id,
+    role: 'COLABORADOR'
+  });
   return res.status(201).json(usuario);
 });
 

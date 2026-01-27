@@ -19,6 +19,7 @@ export interface DocumentoRegulatorio {
   orgao_emissor?: string | null;
   obrigatoriedade: DocumentoObrigatoriedade;
   periodicidade: DocumentoPeriodicidade;
+  impacto?: number;
   exige_responsavel_tecnico?: boolean;
   exige_assinatura?: boolean;
   exige_validade?: boolean;

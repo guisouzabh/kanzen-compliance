@@ -679,7 +679,7 @@ function Requisitos() {
             <Table
               rowKey="id"
               dataSource={requisitosFiltrados}
-              pagination={{ pageSize: 8 }}
+              pagination={{ pageSize: 8, showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}` }}
               size="middle"
               columns={[
                 {

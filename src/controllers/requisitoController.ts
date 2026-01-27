@@ -7,8 +7,10 @@ import {
   deletarRequisitoService,
   listarCheckinsService,
   listarRequisitosService,
+  listarRequisitosPorUsuarioService,
   obterRequisitoComCheckinsService,
   obterRequisitoPorIdService,
+  usuarioTemAcessoRequisito,
   atualizarRequisitoService
 } from '../services/requisitoService';
 import {
@@ -21,7 +23,12 @@ import {
 // Requisitos
 export async function listarRequisitos(req: AuthRequest, res: Response) {
   const tenantId = req.usuario!.tenantId;
-  const requisitos = await listarRequisitosService(tenantId);
+  const role = req.usuario!.role;
+  const usuarioId = req.usuario!.id;
+  const requisitos =
+    role === 'USUARIO_TAREFA'
+      ? await listarRequisitosPorUsuarioService(tenantId, usuarioId)
+      : await listarRequisitosService(tenantId);
   return res.json(requisitos);
 }
 
@@ -49,6 +56,13 @@ export async function obterRequisito(req: AuthRequest, res: Response) {
     throw new AppError('ID inválido', 400);
   }
 
+  if (req.usuario?.role === 'USUARIO_TAREFA') {
+    const permitido = await usuarioTemAcessoRequisito(tenantId, requisitoId, req.usuario.id);
+    if (!permitido) {
+      throw new AppError('Acesso negado', 403);
+    }
+  }
+
   const requisito = await obterRequisitoComCheckinsService(requisitoId, tenantId);
   if (!requisito) {
     throw new AppError('Requisito não encontrado', 404);
@@ -63,6 +77,13 @@ export async function atualizarRequisito(req: AuthRequest, res: Response) {
 
   if (Number.isNaN(requisitoId)) {
     throw new AppError('ID inválido', 400);
+  }
+
+  if (req.usuario?.role === 'USUARIO_TAREFA') {
+    const permitido = await usuarioTemAcessoRequisito(tenantId, requisitoId, req.usuario.id);
+    if (!permitido) {
+      throw new AppError('Acesso negado', 403);
+    }
   }
 
   const parseResult = requisitoSchema.safeParse(req.body);
@@ -91,6 +112,13 @@ export async function deletarRequisito(req: AuthRequest, res: Response) {
     throw new AppError('ID inválido', 400);
   }
 
+  if (req.usuario?.role === 'USUARIO_TAREFA') {
+    const permitido = await usuarioTemAcessoRequisito(tenantId, requisitoId, req.usuario.id);
+    if (!permitido) {
+      throw new AppError('Acesso negado', 403);
+    }
+  }
+
   const removido = await deletarRequisitoService(requisitoId, tenantId);
   if (!removido) {
     throw new AppError('Requisito não encontrado', 404);
@@ -108,6 +136,13 @@ export async function listarCheckins(req: AuthRequest, res: Response) {
     throw new AppError('ID inválido', 400);
   }
 
+  if (req.usuario?.role === 'USUARIO_TAREFA') {
+    const permitido = await usuarioTemAcessoRequisito(tenantId, requisitoId, req.usuario.id);
+    if (!permitido) {
+      throw new AppError('Acesso negado', 403);
+    }
+  }
+
   const requisito = await obterRequisitoPorIdService(requisitoId, tenantId);
   if (!requisito) {
     throw new AppError('Requisito não encontrado', 404);
@@ -123,6 +158,13 @@ export async function criarCheckin(req: AuthRequest, res: Response) {
 
   if (Number.isNaN(requisitoId)) {
     throw new AppError('ID inválido', 400);
+  }
+
+  if (req.usuario?.role === 'USUARIO_TAREFA') {
+    const permitido = await usuarioTemAcessoRequisito(tenantId, requisitoId, req.usuario.id);
+    if (!permitido) {
+      throw new AppError('Acesso negado', 403);
+    }
   }
 
   const parseResult = requisitoCheckinSchema.safeParse(req.body);

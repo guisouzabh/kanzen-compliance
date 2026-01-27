@@ -47,6 +47,7 @@ export async function criarDocumentoRegulatorioService(
         orgao_emissor,
         obrigatoriedade,
         periodicidade,
+        impacto,
         exige_responsavel_tecnico,
         exige_assinatura,
         exige_validade,
@@ -62,6 +63,7 @@ export async function criarDocumentoRegulatorioService(
       dados.orgao_emissor ?? null,
       dados.obrigatoriedade,
       dados.periodicidade,
+      dados.impacto ?? 3,
       dados.exige_responsavel_tecnico ?? false,
       dados.exige_assinatura ?? false,
       dados.exige_validade ?? true,
@@ -104,7 +106,7 @@ export async function atualizarDocumentoRegulatorioService(
     `
       UPDATE documentos_regulatorios
          SET classificacao_id = ?, nome = ?, sigla = ?, descricao = ?, base_legal = ?, orgao_emissor = ?,
-             obrigatoriedade = ?, periodicidade = ?, exige_responsavel_tecnico = ?, exige_assinatura = ?,
+             obrigatoriedade = ?, periodicidade = ?, impacto = ?, exige_responsavel_tecnico = ?, exige_assinatura = ?,
              exige_validade = ?, ativo = ?
        WHERE tenant_id = ? AND id = ?
     `,
@@ -117,6 +119,7 @@ export async function atualizarDocumentoRegulatorioService(
       dados.orgao_emissor ?? null,
       dados.obrigatoriedade,
       dados.periodicidade,
+      dados.impacto ?? 3,
       dados.exige_responsavel_tecnico ?? false,
       dados.exige_assinatura ?? false,
       dados.exige_validade ?? true,
