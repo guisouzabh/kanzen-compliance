@@ -9,6 +9,10 @@ export interface InventarioDado {
   tempo_armazenamento?: string | null;
   local_armazenamento?: string | null;
   processo_id?: number | null;
+  quantidade_existente?: number | null;
+  quantidade_inserida_mes?: number | null;
+  quantidade_tratada_mes?: number | null;
+  principal_agente?: string | null;
   created_at?: string;
   _tempId?: string;
   _status?: 'novo' | 'alterado' | 'salvo';

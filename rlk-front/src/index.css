@@ -6,3 +6,11 @@ body {
   @apply bg-gray-50 text-gray-800;
 }
 
+/* Tighten default Ant Design Space "large" gaps slightly */
+.ant-space-gap-row-large {
+  row-gap: 8px !important;
+}
+
+.ant-space-gap-col-large {
+  column-gap: 8px !important;
+}

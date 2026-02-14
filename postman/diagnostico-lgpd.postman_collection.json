@@ -1,0 +1,280 @@
+{
+  "info": {
+    "name": "Diagnostico LGPD - Backend",
+    "description": "Colecao para testar o backend do Diagnostico LGPD",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api/v1" },
+    { "key": "token", "value": "COLE_SEU_TOKEN_AQUI" },
+    { "key": "nome", "value": "Usuario Teste" },
+    { "key": "email", "value": "teste@exemplo.com" },
+    { "key": "senha", "value": "Senha@123" },
+    { "key": "tenantId", "value": "1" },
+    { "key": "empresaId", "value": "1" },
+    { "key": "areaId", "value": "1" },
+    { "key": "modeloId", "value": "1" },
+    { "key": "perguntaId", "value": "1" },
+    { "key": "execucaoId", "value": "1" },
+    { "key": "empresaId", "value": "1" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nome}}\",\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{senha}}\",\n  \"tenant_id\": {{tenantId}},\n  \"empresa_id\": {{empresaId}},\n  \"area_id\": {{areaId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{senha}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Modelos",
+      "item": [
+        {
+          "name": "Listar modelos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/modelos",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "modelos"]
+            }
+          }
+        },
+        {
+          "name": "Criar modelo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Diagnostico LGPD - Teste\",\n  \"versao\": 1,\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/modelos",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "modelos"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar modelo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Diagnostico LGPD - Teste Atualizado\",\n  \"versao\": 2,\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/modelos/{{modeloId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "modelos", "{{modeloId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Perguntas",
+      "item": [
+        {
+          "name": "Listar perguntas do modelo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/modelos/{{modeloId}}/perguntas",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "modelos", "{{modeloId}}", "perguntas"]
+            }
+          }
+        },
+        {
+          "name": "Criar pergunta",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"MVP_XY\",\n  \"dominio\": \"Governanca\",\n  \"pergunta\": \"Pergunta exemplo?\",\n  \"opcao_0\": \"Nao\",\n  \"opcao_1\": \"Parcial\",\n  \"opcao_2\": \"Sim\",\n  \"opcao_3\": \"Sim, monitorado\",\n  \"peso\": 3,\n  \"ordem\": 99,\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/modelos/{{modeloId}}/perguntas",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "modelos", "{{modeloId}}", "perguntas"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar pergunta",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modelo_id\": {{modeloId}},\n  \"codigo\": \"MVP_XY\",\n  \"dominio\": \"Governanca\",\n  \"pergunta\": \"Pergunta exemplo atualizada?\",\n  \"opcao_0\": \"Nao\",\n  \"opcao_1\": \"Parcial\",\n  \"opcao_2\": \"Sim\",\n  \"opcao_3\": \"Sim, monitorado\",\n  \"peso\": 3,\n  \"ordem\": 99,\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/perguntas/{{perguntaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "perguntas", "{{perguntaId}}"]
+            }
+          }
+        },
+        {
+          "name": "Deletar pergunta",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/perguntas/{{perguntaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "perguntas", "{{perguntaId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Execucoes",
+      "item": [
+        {
+          "name": "Listar execucoes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/execucoes?empresa_id={{empresaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "execucoes"],
+              "query": [
+                { "key": "empresa_id", "value": "{{empresaId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar execucao",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresa_id\": {{empresaId}},\n  \"modelo_id\": {{modeloId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/execucoes",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "execucoes"]
+            }
+          }
+        },
+        {
+          "name": "Obter execucao",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/execucoes/{{execucaoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "execucoes", "{{execucaoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Salvar respostas (rascunho)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"respostas\": [\n    { \"pergunta_id\": 1, \"opcao\": 2 },\n    { \"pergunta_id\": 2, \"opcao\": 3 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/execucoes/{{execucaoId}}/respostas",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "execucoes", "{{execucaoId}}", "respostas"]
+            }
+          }
+        },
+        {
+          "name": "Finalizar execucao",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/execucoes/{{execucaoId}}/finalizar",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "execucoes", "{{execucaoId}}", "finalizar"]
+            }
+          }
+        },
+        {
+          "name": "Resultados por dominio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/diagnosticos/execucoes/{{execucaoId}}/resultados",
+              "host": ["{{baseUrl}}"],
+              "path": ["diagnosticos", "execucoes", "{{execucaoId}}", "resultados"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

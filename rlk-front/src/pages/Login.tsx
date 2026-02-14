@@ -18,6 +18,7 @@ export default function Login() {
     try {
       const response = await api.post('/auth/login', values);
       localStorage.setItem('token', response.data.token);
+      window.dispatchEvent(new Event('auth:token'));
       navigate('/dashboard');
     } catch (err: any) {
       setErro(err?.response?.data?.erro || 'Erro ao fazer login');

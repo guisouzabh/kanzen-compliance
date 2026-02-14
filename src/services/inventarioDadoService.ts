@@ -29,7 +29,10 @@ export async function listarInventarioService(tenantId: number): Promise<Inventa
   return tenantQuery<InventarioDado>(
     tenantId,
     `
-      SELECT id, tenant_id, categoria_id, categoria, dado_tratado, created_at
+      SELECT id, tenant_id, categoria_id, categoria, dado_tratado,
+             dados_sensiveis, dados_menor, tempo_armazenamento, local_armazenamento, processo_id,
+             quantidade_existente, quantidade_inserida_mes, quantidade_tratada_mes, principal_agente,
+             created_at
         FROM inventario_dados
        WHERE tenant_id = ?
        ORDER BY id DESC
@@ -64,9 +67,10 @@ export async function criarInventarioService(
     `
       INSERT INTO inventario_dados (
         tenant_id, categoria_id, categoria, dado_tratado,
-        dados_sensiveis, dados_menor, tempo_armazenamento, local_armazenamento, processo_id
+        dados_sensiveis, dados_menor, tempo_armazenamento, local_armazenamento, processo_id,
+        quantidade_existente, quantidade_inserida_mes, quantidade_tratada_mes, principal_agente
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       dados.categoria_id,
@@ -76,7 +80,11 @@ export async function criarInventarioService(
       dados.dados_menor ?? false,
       dados.tempo_armazenamento ?? null,
       dados.local_armazenamento ?? null,
-      dados.processo_id ?? null
+      dados.processo_id ?? null,
+      dados.quantidade_existente ?? null,
+      dados.quantidade_inserida_mes ?? null,
+      dados.quantidade_tratada_mes ?? null,
+      dados.principal_agente ?? null
     ]
   );
 
@@ -113,7 +121,8 @@ export async function atualizarInventarioService(
       UPDATE inventario_dados
          SET tenant_id = ?, categoria_id = ?, categoria = ?, dado_tratado = ?,
              dados_sensiveis = ?, dados_menor = ?, tempo_armazenamento = ?, local_armazenamento = ?,
-             processo_id = ?
+             processo_id = ?, quantidade_existente = ?, quantidade_inserida_mes = ?,
+             quantidade_tratada_mes = ?, principal_agente = ?
        WHERE tenant_id = ? AND id = ?
     `,
     [
@@ -125,6 +134,10 @@ export async function atualizarInventarioService(
       dados.tempo_armazenamento ?? null,
       dados.local_armazenamento ?? null,
       dados.processo_id ?? null,
+      dados.quantidade_existente ?? null,
+      dados.quantidade_inserida_mes ?? null,
+      dados.quantidade_tratada_mes ?? null,
+      dados.principal_agente ?? null,
       tenantId,
       id
     ]

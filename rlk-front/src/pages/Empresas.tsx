@@ -39,9 +39,91 @@ interface Empresa {
   cidade?: string | null;
   estado?: string | null;
   logo_url?: string | null;
+  parametro_maturidade?: number;
+  termometro_sancoes_id?: number;
 }
 
 type EmpresaFormValues = Omit<Empresa, 'id'>;
+
+const maturidadeOptions = [
+  { value: 0, label: 'Inicial', descricao: 'Processos imprevisiveis e pouco controlados' },
+  { value: 1, label: 'Gerenciado', descricao: 'Processos sao projetos, ainda reativos' },
+  { value: 2, label: 'Definido', descricao: 'Processos conhecidos, documentados e proativos' },
+  { value: 3, label: 'Qualidade', descricao: 'Processos organizados e medidos' },
+  { value: 4, label: 'Otimizacao', descricao: 'Processos organizados, medidos e otimizados' }
+];
+const mapaMaturidade = new Map(maturidadeOptions.map((item) => [item.value, item]));
+const maturidadeExtra = (
+  <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
+    {maturidadeOptions.map((item) => (
+      <div key={item.value}>
+        {item.value} - {item.label}: {item.descricao}
+      </div>
+    ))}
+  </div>
+);
+
+const sancoesOptions = [
+  {
+    value: 0,
+    nome: 'Baixo impacto',
+    sancao: 'Advertência',
+    descricao:
+      'A ANPD notifica a empresa e estabelece prazo para correção da irregularidade, sem multa financeira.'
+  },
+  {
+    value: 1,
+    nome: 'Médio impacto',
+    sancao: 'Multa diária',
+    descricao:
+      'Multa aplicada por dia de descumprimento, limitada ao teto legal, enquanto a irregularidade persistir.'
+  },
+  {
+    value: 2,
+    nome: 'Alto impacto',
+    sancao: 'Multa simples',
+    descricao:
+      'Até 2% do faturamento da empresa no Brasil, limitada a R$ 50 milhões por infração.'
+  },
+  {
+    value: 3,
+    nome: 'Muito alto impacto',
+    sancao: 'Publicização da infração',
+    descricao:
+      'Obrigação de divulgar publicamente a infração cometida, gerando dano reputacional relevante.'
+  },
+  {
+    value: 4,
+    nome: 'Crítico',
+    sancao: 'Bloqueio ou eliminação dos dados pessoais',
+    descricao:
+      'Impedimento temporário do uso dos dados ou exclusão definitiva dos dados relacionados à infração.'
+  },
+  {
+    value: 5,
+    nome: 'Extremo',
+    sancao: 'Suspensão parcial do funcionamento do banco de dados',
+    descricao:
+      'Parte relevante das operações de dados da empresa fica proibida de operar.'
+  },
+  {
+    value: 6,
+    nome: 'Máximo impacto',
+    sancao: 'Suspensão ou proibição total do tratamento de dados pessoais',
+    descricao:
+      'A empresa fica legalmente impedida de tratar dados pessoais, podendo inviabilizar o negócio.'
+  }
+];
+const mapaSancoes = new Map(sancoesOptions.map((item) => [item.value, item]));
+const sancoesExtra = (
+  <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
+    {sancoesOptions.map((item) => (
+      <div key={item.value}>
+        {item.value} - {item.nome} · {item.sancao}: {item.descricao}
+      </div>
+    ))}
+  </div>
+);
 
 function Empresas() {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
@@ -81,7 +163,9 @@ function Empresas() {
       endereco: empresa.endereco ?? undefined,
       cidade: empresa.cidade ?? undefined,
       estado: empresa.estado ?? undefined,
-      logo_url: empresa.logo_url ?? undefined
+      logo_url: empresa.logo_url ?? undefined,
+      parametro_maturidade: empresa.parametro_maturidade ?? 0,
+      termometro_sancoes_id: empresa.termometro_sancoes_id ?? 0
     });
     if (empresa.logo_url) {
       setLogoFileList([
@@ -115,7 +199,9 @@ function Empresas() {
         endereco: values.endereco || null,
         cidade: values.cidade || null,
         estado: values.estado || null,
-        logo_url: values.logo_url || null
+        logo_url: values.logo_url || null,
+        parametro_maturidade: values.parametro_maturidade ?? 0,
+        termometro_sancoes_id: values.termometro_sancoes_id ?? 0
       };
       if (estaEditando && editandoId !== null) {
         const response = await api.put(`/empresas/${editandoId}`, payload);
@@ -221,6 +307,28 @@ function Empresas() {
                 ),
                 width: 120
               },
+              {
+                title: 'Maturidade',
+                dataIndex: 'parametro_maturidade',
+                render: (value?: number) => {
+                  const info = typeof value === 'number' ? mapaMaturidade.get(value) : undefined;
+                  return (
+                    <Tag color={info?.value === 0 ? 'default' : info?.value === 1 ? 'gold' : info?.value === 2 ? 'blue' : info?.value === 3 ? 'green' : 'geekblue'}>
+                      {info ? `${info.label} (${info.value})` : '—'}
+                    </Tag>
+                  );
+                },
+                width: 160
+              },
+              {
+                title: 'Sanções',
+                dataIndex: 'termometro_sancoes_id',
+                render: (value?: number) => {
+                  const info = typeof value === 'number' ? mapaSancoes.get(value) : undefined;
+                  return <Tag color="purple">{info ? info.nome : '—'}</Tag>;
+                },
+                width: 180
+              },
               { title: 'Razão Social', dataIndex: 'razao_social' },
               {
                 title: 'Ações',
@@ -280,7 +388,7 @@ function Empresas() {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ matriz_ou_filial: 'MATRIZ' }}
+          initialValues={{ matriz_ou_filial: 'MATRIZ', parametro_maturidade: 0, termometro_sancoes_id: 0 }}
         >
           <Form.Item
             label="Nome"
@@ -317,6 +425,34 @@ function Empresas() {
             rules={[{ required: true, message: 'Informe a razão social' }]}
           >
             <Input placeholder="Razão social" />
+          </Form.Item>
+
+          <Form.Item
+            label="Parametro de maturidade"
+            name="parametro_maturidade"
+            rules={[{ required: true, message: 'Selecione o nivel de maturidade' }]}
+            extra={maturidadeExtra}
+          >
+            <Select
+              options={maturidadeOptions.map((item) => ({
+                value: item.value,
+                label: `${item.label} (${item.value})`
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Termometro de sanções administrativas"
+            name="termometro_sancoes_id"
+            rules={[{ required: true, message: 'Selecione o nível de impacto' }]}
+            extra={sancoesExtra}
+          >
+            <Select
+              options={sancoesOptions.map((item) => ({
+                value: item.value,
+                label: `${item.nome} · ${item.sancao} (${item.value})`
+              }))}
+            />
           </Form.Item>
 
           <Space size="large" style={{ width: '100%' }} wrap>

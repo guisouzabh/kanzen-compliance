@@ -27,6 +27,10 @@ type InventarioFormValues = {
   tempo_armazenamento?: string | null;
   local_armazenamento?: string | null;
   processo_id?: number | null;
+  quantidade_existente?: number | null;
+  quantidade_inserida_mes?: number | null;
+  quantidade_tratada_mes?: number | null;
+  principal_agente?: string | null;
 };
 
 function InventarioDados() {
@@ -120,7 +124,11 @@ function InventarioDados() {
       dados_menor: item.dados_menor ?? false,
       tempo_armazenamento: item.tempo_armazenamento ?? null,
       local_armazenamento: item.local_armazenamento ?? null,
-      processo_id: item.processo_id ?? null
+      processo_id: item.processo_id ?? null,
+      quantidade_existente: item.quantidade_existente ?? null,
+      quantidade_inserida_mes: item.quantidade_inserida_mes ?? null,
+      quantidade_tratada_mes: item.quantidade_tratada_mes ?? null,
+      principal_agente: item.principal_agente ?? null
     });
     setEditandoId(item.id);
     setModalAberta(true);
@@ -142,7 +150,11 @@ function InventarioDados() {
         dados_menor: values.dados_menor ?? false,
         tempo_armazenamento: values.tempo_armazenamento || null,
         local_armazenamento: values.local_armazenamento || null,
-        processo_id: values.processo_id ?? null
+        processo_id: values.processo_id ?? null,
+        quantidade_existente: values.quantidade_existente ?? null,
+        quantidade_inserida_mes: values.quantidade_inserida_mes ?? null,
+        quantidade_tratada_mes: values.quantidade_tratada_mes ?? null,
+        principal_agente: values.principal_agente?.trim() || null
       };
 
       if (estaEditando && editandoId !== null) {
@@ -196,7 +208,11 @@ function InventarioDados() {
       dados_menor: item.dados_menor ?? false,
       tempo_armazenamento: item.tempo_armazenamento ?? null,
       local_armazenamento: item.local_armazenamento ?? null,
-      processo_id: item.processo_id ?? null
+      processo_id: item.processo_id ?? null,
+      quantidade_existente: item.quantidade_existente ?? null,
+      quantidade_inserida_mes: item.quantidade_inserida_mes ?? null,
+      quantidade_tratada_mes: item.quantidade_tratada_mes ?? null,
+      principal_agente: item.principal_agente ?? null
     };
     setLista((prev) =>
       prev.map((i) =>
@@ -377,6 +393,74 @@ function InventarioDados() {
           </Select>
         );
       }
+    },
+    {
+      title: 'Qtd existente',
+      dataIndex: 'quantidade_existente',
+      width: 150,
+      render: (_: number, record: InventarioDado) => (
+        <Input
+          type="number"
+          min={0}
+          value={record.quantidade_existente ?? undefined}
+          placeholder="0"
+          onChange={(e) =>
+            marcarAlterado(record.id, record._tempId, {
+              quantidade_existente: e.target.value === '' ? null : Number(e.target.value)
+            })
+          }
+        />
+      )
+    },
+    {
+      title: 'Qtd inserida/mês',
+      dataIndex: 'quantidade_inserida_mes',
+      width: 170,
+      render: (_: number, record: InventarioDado) => (
+        <Input
+          type="number"
+          min={0}
+          value={record.quantidade_inserida_mes ?? undefined}
+          placeholder="0"
+          onChange={(e) =>
+            marcarAlterado(record.id, record._tempId, {
+              quantidade_inserida_mes: e.target.value === '' ? null : Number(e.target.value)
+            })
+          }
+        />
+      )
+    },
+    {
+      title: 'Qtd tratada/mês',
+      dataIndex: 'quantidade_tratada_mes',
+      width: 170,
+      render: (_: number, record: InventarioDado) => (
+        <Input
+          type="number"
+          min={0}
+          value={record.quantidade_tratada_mes ?? undefined}
+          placeholder="0"
+          onChange={(e) =>
+            marcarAlterado(record.id, record._tempId, {
+              quantidade_tratada_mes: e.target.value === '' ? null : Number(e.target.value)
+            })
+          }
+        />
+      )
+    },
+    {
+      title: 'Principal agente',
+      dataIndex: 'principal_agente',
+      width: 200,
+      render: (_: string, record: InventarioDado) => (
+        <Input
+          value={record.principal_agente ?? ''}
+          placeholder="Ex: Atendimento, RH"
+          onChange={(e) =>
+            marcarAlterado(record.id, record._tempId, { principal_agente: e.target.value })
+          }
+        />
+      )
     },
     {
       title: 'Ações',
@@ -571,6 +655,22 @@ function InventarioDados() {
               showSearch
               optionFilterProp="label"
             />
+          </Form.Item>
+
+          <Space size="large" style={{ width: '100%' }} wrap>
+            <Form.Item label="Quantidade existente" name="quantidade_existente">
+              <Input type="number" min={0} placeholder="0" />
+            </Form.Item>
+            <Form.Item label="Quantidade inserida por mês" name="quantidade_inserida_mes">
+              <Input type="number" min={0} placeholder="0" />
+            </Form.Item>
+            <Form.Item label="Quantidade tratada por mês" name="quantidade_tratada_mes">
+              <Input type="number" min={0} placeholder="0" />
+            </Form.Item>
+          </Space>
+
+          <Form.Item label="Principal agente" name="principal_agente">
+            <Input placeholder="Ex: Atendimento, RH, Comercial" maxLength={255} />
           </Form.Item>
         </Form>
       </Modal>

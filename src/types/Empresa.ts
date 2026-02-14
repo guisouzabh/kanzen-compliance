@@ -11,4 +11,6 @@ export interface Empresa {
   cidade?: string | null;
   estado?: string | null;
   logo_url?: string | null;
+  parametro_maturidade?: number;
+  termometro_sancoes_id?: number;
 }

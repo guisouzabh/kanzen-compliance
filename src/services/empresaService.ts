@@ -16,13 +16,28 @@ export async function criarEmpresaService(
   dados: Empresa,
   tenantId: number
 ): Promise<Empresa> {
-  const { nome, cnpj, matriz_ou_filial, razao_social, cep, endereco, cidade, estado, logo_url } = dados;
+  const {
+    nome,
+    cnpj,
+    matriz_ou_filial,
+    razao_social,
+    cep,
+    endereco,
+    cidade,
+    estado,
+    logo_url,
+    parametro_maturidade,
+    termometro_sancoes_id
+  } = dados;
+  const maturidade = parametro_maturidade ?? 0;
+  const termometro = termometro_sancoes_id ?? 0;
 
   const sql = `
     INSERT INTO empresas (
-      tenant_id, nome, cnpj, matriz_ou_filial, razao_social, cep, endereco, cidade, estado, logo_url
+      tenant_id, nome, cnpj, matriz_ou_filial, razao_social, cep, endereco, cidade, estado, logo_url,
+      parametro_maturidade, termometro_sancoes_id
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const result = await tenantExecute(tenantId, sql, [
@@ -34,7 +49,9 @@ export async function criarEmpresaService(
     endereco ?? null,
     cidade ?? null,
     estado ?? null,
-    logo_url ?? null
+    logo_url ?? null,
+    maturidade,
+    termometro
   ]);
 
   await logChange('Empresa', 'CREATE', { tenantId, ...dados });
@@ -49,7 +66,9 @@ export async function criarEmpresaService(
     endereco: endereco ?? null,
     cidade: cidade ?? null,
     estado: estado ?? null,
-    logo_url: logo_url ?? null
+    logo_url: logo_url ?? null,
+    parametro_maturidade: maturidade,
+    termometro_sancoes_id: termometro
   };
 }
 
@@ -77,12 +96,27 @@ export async function atualizarEmpresaService(
   dados: Empresa,
   tenantId: number
 ): Promise<Empresa | null> {
-  const { nome, cnpj, matriz_ou_filial, razao_social, cep, endereco, cidade, estado, logo_url } = dados;
+  const {
+    nome,
+    cnpj,
+    matriz_ou_filial,
+    razao_social,
+    cep,
+    endereco,
+    cidade,
+    estado,
+    logo_url,
+    parametro_maturidade,
+    termometro_sancoes_id
+  } = dados;
+  const maturidade = parametro_maturidade ?? 0;
+  const termometro = termometro_sancoes_id ?? 0;
 
   const sql = `
     UPDATE empresas
        SET tenant_id = ?, nome = ?, cnpj = ?, matriz_ou_filial = ?, razao_social = ?,
-           cep = ?, endereco = ?, cidade = ?, estado = ?, logo_url = ?
+           cep = ?, endereco = ?, cidade = ?, estado = ?, logo_url = ?, parametro_maturidade = ?,
+           termometro_sancoes_id = ?
      WHERE tenant_id = ? AND id = ?
   `;
 
@@ -96,6 +130,8 @@ export async function atualizarEmpresaService(
     cidade ?? null,
     estado ?? null,
     logo_url ?? null,
+    maturidade,
+    termometro,
     tenantId,
     id
   ]);
@@ -117,7 +153,9 @@ export async function atualizarEmpresaService(
     endereco: endereco ?? null,
     cidade: cidade ?? null,
     estado: estado ?? null,
-    logo_url: logo_url ?? null
+    logo_url: logo_url ?? null,
+    parametro_maturidade: maturidade,
+    termometro_sancoes_id: termometro
   };
 }
 

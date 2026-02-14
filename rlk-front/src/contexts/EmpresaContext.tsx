@@ -12,6 +12,8 @@ interface EmpresaContextValue {
     cidade?: string | null;
     estado?: string | null;
     logo_url?: string | null;
+    parametro_maturidade?: number;
+    termometro_sancoes_id?: number;
   }[];
   empresaSelecionada: number | null; // null representa "TODAS"
   setEmpresaSelecionada: (id: number | null) => void;
@@ -40,6 +42,8 @@ export function EmpresaProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function carregar() {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
         setCarregando(true);
         const resp = await api.get('/empresas');
         setEmpresas(resp.data || []);
@@ -48,6 +52,15 @@ export function EmpresaProvider({ children }: { children: React.ReactNode }) {
       }
     }
     carregar();
+
+    function handleTokenChange() {
+      carregar();
+    }
+
+    window.addEventListener('auth:token', handleTokenChange);
+    return () => {
+      window.removeEventListener('auth:token', handleTokenChange);
+    };
   }, []);
 
   return (

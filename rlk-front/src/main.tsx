@@ -23,6 +23,10 @@ import InventarioDados from './pages/InventarioDados';
 import CategoriasDados from './pages/CategoriasDados';
 import LgpdMapa from './pages/LgpdMapa';
 import Processos from './pages/Processos';
+import SolicitacoesTitular from './pages/SolicitacoesTitular';
+import PainelMaturidadeSancoes from './pages/PainelMaturidadeSancoes';
+import EmpresaDadosStatus from './pages/EmpresaDadosStatus';
+import DiagnosticoLgpd from './pages/DiagnosticoLgpd';
 import NovoRequisito from './pages/NovoRequisito';
 import { EmpresaProvider } from './contexts/EmpresaContext';
 import MainLayout from './layouts/MainLayout';
@@ -72,6 +76,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="/inventario-dados" element={<InventarioDados />} />
                   <Route path="/categorias-dados" element={<CategoriasDados />} />
                   <Route path="/processos" element={<Processos />} />
+                  <Route path="/solicitacoes-titular" element={<SolicitacoesTitular />} />
+                  <Route path="/painel-maturidade-sancoes" element={<PainelMaturidadeSancoes />} />
+                  <Route path="/empresa-dados-status" element={<EmpresaDadosStatus />} />
+                  <Route path="/diagnostico-lgpd" element={<DiagnosticoLgpd />} />
                   <Route path="/lgpd-mapa" element={<LgpdMapa />} />
                   <Route path="/usuarios" element={<Usuarios />} />
                   <Route path="/requisitos/novo" element={<NovoRequisito />} />

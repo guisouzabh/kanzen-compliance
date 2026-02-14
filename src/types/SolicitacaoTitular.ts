@@ -1,0 +1,31 @@
+export interface SolicitacaoTitular {
+  id?: number;
+  tenant_id?: number;
+  empresa_id: number;
+  empresa_nome?: string;
+  protocolo?: string;
+  canal_entrada?: string | null;
+  nome: string;
+  cpf?: string | null;
+  data_nascimento?: string | null;
+  email: string;
+  telefone?: string | null;
+  endereco?: string | null;
+  tipo_relacao?: string | null;
+  identificador_interno?: string | null;
+  periodo_relacao?: string | null;
+  tipo_solicitacao: string;
+  descricao_pedido: string;
+  categorias_dados?: string | null;
+  sistemas?: string | null;
+  canal_resposta?: string | null;
+  idioma?: string | null;
+  declaracao_veracidade?: boolean;
+  ciente_prazo?: boolean;
+  autorizacao_uso?: boolean;
+  status?: string;
+  responsavel_id?: number | null;
+  prazo_resposta?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}

@@ -15,7 +15,9 @@ export const empresaSchema = z.object({
   endereco: z.string().max(255, 'Endereço muito longo').optional().nullable(),
   cidade: z.string().max(100, 'Cidade muito longa').optional().nullable(),
   estado: z.string().max(2, 'Estado muito longo').optional().nullable(),
-  logo_url: z.string().max(500, 'URL muito longa').optional().nullable()
+  logo_url: z.string().max(500, 'URL muito longa').optional().nullable(),
+  parametro_maturidade: z.number().int().min(0).max(4).optional().default(0),
+  termometro_sancoes_id: z.number().int().min(0).max(6).optional().default(0)
 });
 
 export type EmpresaInput = z.infer<typeof empresaSchema>;

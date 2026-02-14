@@ -23,6 +23,10 @@ import documentoConteudoSecaoRoutes from './routes/documentoConteudoSecaoRoutes'
 import inventarioDadoRoutes from './routes/inventarioDadoRoutes';
 import categoriaDadoPessoalRoutes from './routes/categoriaDadoPessoalRoutes';
 import processoRoutes from './routes/processoRoutes';
+import solicitacaoTitularRoutes from './routes/solicitacaoTitularRoutes';
+import statusLgpdRoutes from './routes/statusLgpdRoutes';
+import empresaDadosStatusRoutes from './routes/empresaDadosStatusRoutes';
+import diagnosticoLgpdRoutes from './routes/diagnosticoLgpdRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -54,6 +58,10 @@ app.use('/api/v1', documentoConteudoSecaoRoutes);
 app.use('/api/v1', inventarioDadoRoutes);
 app.use('/api/v1', categoriaDadoPessoalRoutes);
 app.use('/api/v1', processoRoutes);
+app.use('/api/v1', solicitacaoTitularRoutes);
+app.use('/api/v1', statusLgpdRoutes);
+app.use('/api/v1', empresaDadosStatusRoutes);
+app.use('/api/v1', diagnosticoLgpdRoutes);
 
 app.get('/', (req, res) => {
   res.send('API RLK rodando com backend pro + auth.');

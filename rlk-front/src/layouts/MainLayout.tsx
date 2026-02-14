@@ -165,6 +165,26 @@ function MainLayout() {
           key: '/processos',
           icon: <FileTextOutlined />,
           label: <Link to="/processos">Processos</Link>
+        },
+        {
+          key: '/empresa-dados-status',
+          icon: <FileTextOutlined />,
+          label: <Link to="/empresa-dados-status">Status LGPD</Link>
+        },
+        {
+          key: '/diagnostico-lgpd',
+          icon: <FileTextOutlined />,
+          label: <Link to="/diagnostico-lgpd">Diagnóstico LGPD</Link>
+        },
+        {
+          key: '/solicitacoes-titular',
+          icon: <FileTextOutlined />,
+          label: <Link to="/solicitacoes-titular">Direitos do Titular</Link>
+        },
+        {
+          key: '/painel-maturidade-sancoes',
+          icon: <FileTextOutlined />,
+          label: <Link to="/painel-maturidade-sancoes">Painel Maturidade e Sanções</Link>
         }
       ]
     },
@@ -300,7 +320,7 @@ function MainLayout() {
         </Space>
       </Header>
 
-      <Content style={{ padding: '24px 32px', background: '#f5f7fb' }}>
+      <Content style={{ padding: '8px 8px', background: '#f5f7fb' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Outlet />
         </div>
