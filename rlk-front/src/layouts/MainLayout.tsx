@@ -115,6 +115,18 @@ function MainLayout() {
       label: <Link to="/requisitos">Requisitos</Link>
     },
     {
+      key: 'atividades',
+      icon: <AuditOutlined />,
+      label: 'Atividades',
+      children: [
+        {
+          key: '/matriz-acoes',
+          icon: <FileTextOutlined />,
+          label: <Link to="/matriz-acoes">Matriz de Ações</Link>
+        }
+      ]
+    },
+    {
       key: 'documentos',
       icon: <FileTextOutlined />,
       label: 'Documentos',

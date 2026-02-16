@@ -27,6 +27,7 @@ import solicitacaoTitularRoutes from './routes/solicitacaoTitularRoutes';
 import statusLgpdRoutes from './routes/statusLgpdRoutes';
 import empresaDadosStatusRoutes from './routes/empresaDadosStatusRoutes';
 import diagnosticoLgpdRoutes from './routes/diagnosticoLgpdRoutes';
+import matrizAcaoRoutes from './routes/matrizAcaoRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -62,6 +63,7 @@ app.use('/api/v1', solicitacaoTitularRoutes);
 app.use('/api/v1', statusLgpdRoutes);
 app.use('/api/v1', empresaDadosStatusRoutes);
 app.use('/api/v1', diagnosticoLgpdRoutes);
+app.use('/api/v1', matrizAcaoRoutes);
 
 app.get('/', (req, res) => {
   res.send('API RLK rodando com backend pro + auth.');

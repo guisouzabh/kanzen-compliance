@@ -28,6 +28,7 @@ import PainelMaturidadeSancoes from './pages/PainelMaturidadeSancoes';
 import EmpresaDadosStatus from './pages/EmpresaDadosStatus';
 import DiagnosticoLgpd from './pages/DiagnosticoLgpd';
 import NovoRequisito from './pages/NovoRequisito';
+import MatrizAcoes from './pages/MatrizAcoes';
 import { EmpresaProvider } from './contexts/EmpresaContext';
 import MainLayout from './layouts/MainLayout';
 import RequireAuth from './components/RequireAuth';
@@ -80,6 +81,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="/painel-maturidade-sancoes" element={<PainelMaturidadeSancoes />} />
                   <Route path="/empresa-dados-status" element={<EmpresaDadosStatus />} />
                   <Route path="/diagnostico-lgpd" element={<DiagnosticoLgpd />} />
+                  <Route path="/matriz-acoes" element={<MatrizAcoes />} />
                   <Route path="/lgpd-mapa" element={<LgpdMapa />} />
                   <Route path="/usuarios" element={<Usuarios />} />
                   <Route path="/requisitos/novo" element={<NovoRequisito />} />
