@@ -285,15 +285,7 @@ function AssistenteSecoes() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Assistente de Conteúdo por Seção
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Preencha cada seção do documento seguindo o modelo aprovado.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => carregarDados(true)} />
         </Space>

@@ -1,28 +1,38 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Space, Typography, Select, Spin, Badge } from 'antd';
-import {
-  ApartmentOutlined,
-  LogoutOutlined,
-  AuditOutlined,
-  DashboardOutlined,
-  SettingOutlined,
-  ClusterOutlined,
-  UserOutlined,
-  DeploymentUnitOutlined,
-  NodeIndexOutlined,
-  BellOutlined,
-  FileTextOutlined
-} from '@ant-design/icons';
+import { useEffect, useMemo, useState } from 'react';
+import { Layout, Menu, Button, Space, Typography, Select, Spin, Badge, Drawer, Grid, Dropdown, Avatar } from 'antd';
+import type { MenuProps } from 'antd';
+import { LogoutOutlined, BellOutlined, MenuUnfoldOutlined, UserOutlined, EditOutlined, LockOutlined } from '@ant-design/icons';
 import { useEmpresaContext } from '../contexts/EmpresaContext';
 import api from '../services/api';
+import {
+  buildMobileMenuItems,
+  buildNavigationForRole,
+  buildSecondLevelMenuItems,
+  buildTopLevelMenuItems,
+  getDefaultModulePath,
+  resolveNavigationState
+} from './navigationConfig';
+
+const ROUTE_TITLE_OVERRIDES: Array<{ pattern: RegExp; title: string }> = [
+  { pattern: /^\/meu-perfil$/, title: 'Meu Perfil' },
+  { pattern: /^\/notificacoes$/, title: 'Notificacoes' }
+];
 
 function MainLayout() {
-  const { Header, Content } = Layout;
+  const { Content } = Layout;
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
+  const isMobile = !screens.lg;
   const navigate = useNavigate();
   const location = useLocation();
   const { empresas, empresaSelecionada, setEmpresaSelecionada, carregando } = useEmpresaContext();
   const [naoLidas, setNaoLidas] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
+  const [forcedModuleKey, setForcedModuleKey] = useState<string | null>(null);
+  const [nomePerfil, setNomePerfil] = useState<string | null>(null);
+  const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
 
   function getUsuarioIdFromToken() {
     const token = localStorage.getItem('token');
@@ -50,6 +60,19 @@ function MainLayout() {
     }
   }
 
+  function getUsuarioNomeFromToken() {
+    const token = localStorage.getItem('token');
+    if (!token) return 'Usuario';
+    const parts = token.split('.');
+    if (parts.length < 2) return 'Usuario';
+    try {
+      const payload = JSON.parse(atob(parts[1]));
+      return typeof payload.nome === 'string' && payload.nome.trim() ? payload.nome : 'Usuario';
+    } catch {
+      return 'Usuario';
+    }
+  }
+
   function handleLogout() {
     localStorage.removeItem('token');
     navigate('/login');
@@ -74,269 +97,287 @@ function MainLayout() {
         if (ativo) setNaoLidas(0);
       }
     }
+
     carregarNaoLidas();
     const intervalId = window.setInterval(carregarNaoLidas, 30000);
+
     return () => {
       ativo = false;
       window.clearInterval(intervalId);
     };
   }, []);
 
-  const usuarioRole = getUsuarioRoleFromToken();
-  const podeGerenciarConfig = !usuarioRole || usuarioRole === 'GESTOR';
-  const podeGerenciarHierarquia = !usuarioRole || usuarioRole === 'GESTOR';
+  useEffect(() => {
+    let ativo = true;
 
-  const menuItems = [
-     {
-      key: 'gestor',
-      icon: <FileTextOutlined />,
-      label: 'Gestor',
-      children: [
-        {
-          key: '/documentos-regulatorios',
-          icon: <FileTextOutlined />,
-          label: <Link to="/documentos-regulatorios">Documentos Regulatórios</Link>
-        },
-        {
-          key: '/documentos-modelo-secoes',
-          icon: <FileTextOutlined />,
-          label: <Link to="/documentos-modelo-secoes">Modelo de Seções</Link>
-        }
-      ]
-    },
+    async function carregarMeuPerfil() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const response = await api.get('/usuarios/me');
+        if (!ativo) return;
+        setNomePerfil(response.data?.nome ?? null);
+        setFotoPerfil(response.data?.foto_url ?? null);
+      } catch {
+        if (!ativo) return;
+        setNomePerfil(null);
+        setFotoPerfil(null);
+      }
+    }
+
+    carregarMeuPerfil();
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
+  const usuarioRole = getUsuarioRoleFromToken();
+  const usuarioNome = nomePerfil || getUsuarioNomeFromToken();
+
+  const navigationModules = useMemo(() => buildNavigationForRole(usuarioRole), [usuarioRole]);
+  const navigationState = useMemo(
+    () => resolveNavigationState(navigationModules, location.pathname),
+    [navigationModules, location.pathname]
+  );
+
+  useEffect(() => {
+    setForcedModuleKey(null);
+  }, [location.pathname]);
+
+  const currentModule = useMemo(() => {
+    if (forcedModuleKey) {
+      const forced = navigationModules.find((module) => module.key === forcedModuleKey);
+      if (forced) return forced;
+    }
+    if (navigationState.activeModule) return navigationState.activeModule;
+    return navigationModules[0] ?? null;
+  }, [forcedModuleKey, navigationModules, navigationState.activeModule]);
+
+  useEffect(() => {
+    if (!currentModule) return;
+    setOpenKeys([currentModule.key]);
+  }, [currentModule]);
+
+  const topLevelMenuItems = useMemo(() => buildTopLevelMenuItems(navigationModules), [navigationModules]);
+  const secondLevelMenuItems = useMemo(() => buildSecondLevelMenuItems(currentModule), [currentModule]);
+  const mobileMenuItems = useMemo(() => buildMobileMenuItems(navigationModules), [navigationModules]);
+
+  const selectedTopKeys = currentModule ? [currentModule.key] : [];
+  const selectedSecondKeys =
+    navigationState.activeItem && !navigationState.activeItem.hiddenInMenu ? [navigationState.activeItem.path] : [];
+
+  const currentPageTitle = useMemo(() => {
+    const override = ROUTE_TITLE_OVERRIDES.find((item) => item.pattern.test(location.pathname));
+    if (override) return override.title;
+    if (navigationState.activeItem) return navigationState.activeItem.label;
+    return 'Painel Administrativo';
+  }, [location.pathname, navigationState.activeItem]);
+
+  useEffect(() => {
+    if (!isMobile) setMobileMenuOpen(false);
+  }, [isMobile]);
+
+  function handleTopLevelNavigation(key: string) {
+    const module = navigationModules.find((item) => item.key === key);
+    if (!module) return;
+
+    setForcedModuleKey(module.key);
+
+    const alreadyInsideModule = module.items.some((item) => {
+      if (location.pathname === item.path) return true;
+      return location.pathname.startsWith(`${item.path}/`);
+    });
+
+    if (!alreadyInsideModule) {
+      const defaultPath = getDefaultModulePath(module);
+      if (defaultPath) navigate(defaultPath);
+    }
+  }
+
+  function handleSecondLevelNavigation(key: string) {
+    if (!key.startsWith('/')) return;
+    navigate(key);
+  }
+
+  function handleMobileNavigation(key: string) {
+    if (!key.startsWith('/')) return;
+    navigate(key);
+    setMobileMenuOpen(false);
+  }
+
+  function handleUserMenuClick(key: string) {
+    if (key === 'notificacoes') {
+      navigate('/notificacoes');
+      return;
+    }
+    if (key === 'editar-usuario') {
+      navigate('/meu-perfil');
+      return;
+    }
+    if (key === 'trocar-senha') {
+      navigate('/meu-perfil', { state: { tab: 'senha' } });
+      return;
+    }
+    if (key === 'sair') {
+      handleLogout();
+    }
+  }
+
+  const userMenuItems: MenuProps['items'] = [
     {
-      key: '/dashboard',
-      icon: <DashboardOutlined />,
-      label: <Link to="/dashboard">Dashboard</Link>
+      key: 'usuario-label',
+      label: <Typography.Text strong>{usuarioNome}</Typography.Text>,
+      disabled: true
     },
-    {
-      key: '/requisitos',
-      icon: <AuditOutlined />,
-      label: <Link to="/requisitos">Requisitos</Link>
-    },
-    {
-      key: 'atividades',
-      icon: <AuditOutlined />,
-      label: 'Atividades',
-      children: [
-        {
-          key: '/matriz-acoes',
-          icon: <FileTextOutlined />,
-          label: <Link to="/matriz-acoes">Matriz de Ações</Link>
-        }
-      ]
-    },
-    {
-      key: 'documentos',
-      icon: <FileTextOutlined />,
-      label: 'Documentos',
-      children: [
-        {
-          key: '/documentos-empresa',
-          icon: <FileTextOutlined />,
-          label: <Link to="/documentos-empresa">Documentos da Empresa</Link>
-        },
-        {
-          key: '/documento-conteudo',
-          icon: <FileTextOutlined />,
-          label: <Link to="/documento-conteudo">Documento Conteúdo</Link>
-        },
-        {
-          key: '/documentos-conteudo-secoes',
-          icon: <FileTextOutlined />,
-          label: <Link to="/documentos-conteudo-secoes">Conteúdo por Seção</Link>
-        },
-        {
-          key: '/assistente-secoes',
-          icon: <FileTextOutlined />,
-          label: <Link to="/assistente-secoes">Assistente de Seções</Link>
-        }
-      ]
-    },
-    {
-      key: 'dados-pessoais',
-      icon: <FileTextOutlined />,
-      label: 'Dados Pessoais',
-      children: [
-        {
-          key: '/lgpd-mapa',
-          icon: <FileTextOutlined />,
-          label: <Link to="/lgpd-mapa">Mapa LGPD</Link>
-        },
-        {
-          key: '/inventario-dados',
-          icon: <FileTextOutlined />,
-          label: <Link to="/inventario-dados">Inventário de Dados</Link>
-        },
-        {
-          key: '/categorias-dados',
-          icon: <FileTextOutlined />,
-          label: <Link to="/categorias-dados">Categorias de Dados</Link>
-        },
-        {
-          key: '/processos',
-          icon: <FileTextOutlined />,
-          label: <Link to="/processos">Processos</Link>
-        },
-        {
-          key: '/empresa-dados-status',
-          icon: <FileTextOutlined />,
-          label: <Link to="/empresa-dados-status">Status LGPD</Link>
-        },
-        {
-          key: '/diagnostico-lgpd',
-          icon: <FileTextOutlined />,
-          label: <Link to="/diagnostico-lgpd">Diagnóstico LGPD</Link>
-        },
-        {
-          key: '/solicitacoes-titular',
-          icon: <FileTextOutlined />,
-          label: <Link to="/solicitacoes-titular">Direitos do Titular</Link>
-        },
-        {
-          key: '/painel-maturidade-sancoes',
-          icon: <FileTextOutlined />,
-          label: <Link to="/painel-maturidade-sancoes">Painel Maturidade e Sanções</Link>
-        }
-      ]
-    },
-    podeGerenciarHierarquia
-      ? {
-          key: 'hierarquia',
-          icon: <ClusterOutlined />,
-          label: 'Hierarquia',
-          children: [
-            {
-              key: '/areas',
-              icon: <ClusterOutlined />,
-              label: <Link to="/areas">Áreas</Link>
-            },
-            {
-              key: '/subareas',
-              icon: <NodeIndexOutlined />,
-              label: <Link to="/subareas">Subáreas</Link>
-            },
-            {
-              key: '/subareas2',
-              icon: <NodeIndexOutlined />,
-              label: <Link to="/subareas2">Subárea 2</Link>
-            },
-            {
-              key: '/hierarquia',
-              icon: <ClusterOutlined />,
-              label: <Link to="/hierarquia">Hierarquia</Link>
-            }
-          ]
-        }
-      : null,
-    {
-      key: '/notificacoes',
-      icon: <BellOutlined />,
-      label: <Link to="/notificacoes">Notificações</Link>
-    },
-    podeGerenciarConfig
-      ? {
-          key: 'config',
-          icon: <SettingOutlined />,
-          label: 'Configurações',
-          children: [
-            {
-              key: '/empresas',
-              icon: <ApartmentOutlined />,
-              label: <Link to="/empresas">Empresas</Link>
-            },
-            {
-              key: '/unidades',
-              icon: <DeploymentUnitOutlined />,
-              label: <Link to="/unidades">Unidades</Link>
-            },
-            {
-              key: '/usuarios',
-              icon: <UserOutlined />,
-              label: <Link to="/usuarios">Usuários</Link>
-            }
-          ]
-        }
-      : null
-  ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+    { type: 'divider' },
+    { key: 'notificacoes', icon: <BellOutlined />, label: 'Ver notificacoes' },
+    { key: 'editar-usuario', icon: <EditOutlined />, label: 'Editar usuario' },
+    { key: 'trocar-senha', icon: <LockOutlined />, label: 'Trocar senha' },
+    { type: 'divider' },
+    { key: 'sair', icon: <LogoutOutlined />, label: 'Sair', danger: true }
+  ];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header
-        style={{
-          background: '#0b5be1',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 24px',
-          boxShadow: '0 6px 18px -12px rgba(0,0,0,0.35)'
-        }}
-      >
-        <Space size="large" align="center">
-          <Link to="/empresas" style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'white' }}>
+      <Drawer
+        title={
+          <Space>
             <img
               src="/logo.png"
               alt="Logo"
-              style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', background: '#fff' }}
+              style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover', background: '#fff' }}
             />
-            <div style={{ lineHeight: 1.1 }}>
-              <Typography.Text style={{ color: 'white', fontSize: 18, fontWeight: 700 }}>
-                LegalK
-              </Typography.Text>
-              <br />
-              <Typography.Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>
-                Painel Administrativo
-              </Typography.Text>
-            </div>
-          </Link>
+            <span>LegalK</span>
+          </Space>
+        }
+        placement="left"
+        width={screens.sm ? 360 : 'calc(100vw - 24px)'}
+        onClose={() => setMobileMenuOpen(false)}
+        open={isMobile && mobileMenuOpen}
+        bodyStyle={{ padding: 12 }}
+      >
+        <Menu
+          mode="inline"
+          selectedKeys={selectedSecondKeys}
+          openKeys={openKeys}
+          onOpenChange={(keys) => setOpenKeys(keys as string[])}
+          items={mobileMenuItems}
+          onClick={({ key }) => handleMobileNavigation(String(key))}
+          style={{ borderRight: 'none' }}
+        />
+      </Drawer>
 
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            selectedKeys={[location.pathname]}
-            style={{ background: 'transparent' }}
-            items={menuItems}
-          />
-        </Space>
+      <Layout>
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 30,
+            background: '#ffffff',
+            borderBottom: '1px solid #e5e7eb'
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: isMobile ? '10px 10px' : '10px 16px',
+              gap: 12
+            }}
+          >
+            <Space align="center" size="small">
+              {isMobile && <Button type="text" icon={<MenuUnfoldOutlined />} onClick={() => setMobileMenuOpen(true)} />}
+              <Link to="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                <img
+                  src="/logo.png"
+                  alt="Logo"
+                  style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover', background: '#fff' }}
+                />
+                {!isMobile && (
+                  <Typography.Text style={{ fontWeight: 700, fontSize: 16, color: '#1f2937' }}>LegalK</Typography.Text>
+                )}
+              </Link>
+              <Typography.Text style={{ fontWeight: 600, fontSize: isMobile ? 15 : 18, color: '#1f2937' }}>
+                {currentPageTitle}
+              </Typography.Text>
+            </Space>
 
-        <Space size="middle" align="center">
-          <Link to="/notificacoes">
-            <Badge count={naoLidas} size="small" offset={[-2, 2]}>
-              <Button icon={<BellOutlined />} ghost>
-                Notificações
-              </Button>
-            </Badge>
-          </Link>
-          <div style={{ minWidth: 220 }}>
-            <Select
-              loading={carregando}
-              style={{ width: '100%' }}
-              placeholder="Selecionar empresa"
-              value={empresaSelecionada ?? 'all'}
-              onChange={(value) => setEmpresaSelecionada(value === 'all' ? null : Number(value))}
-              options={[
-                { label: 'Todas', value: 'all' },
-                ...empresas.map((e) => ({ label: e.nome, value: e.id }))
-              ]}
-              suffixIcon={carregando ? <Spin size="small" /> : undefined}
-            />
+            <Space size={isMobile ? 'small' : 'middle'} align="center">
+              {!isMobile && (
+                <div style={{ minWidth: 260 }}>
+                  <Select
+                    loading={carregando}
+                    style={{ width: '100%' }}
+                    placeholder="Selecionar empresa"
+                    value={empresaSelecionada ?? undefined}
+                    onChange={(value) => setEmpresaSelecionada(Number(value))}
+                    options={empresas.map((empresa) => ({ label: empresa.nome, value: empresa.id }))}
+                    suffixIcon={carregando ? <Spin size="small" /> : undefined}
+                    disabled={!empresas.length}
+                  />
+                </div>
+              )}
+
+              <Dropdown
+                menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(String(key)) }}
+                trigger={['click']}
+                placement="bottomRight"
+              >
+                <Badge count={naoLidas} size="small" offset={[-2, 2]}>
+                  <Avatar
+                    size={isMobile ? 32 : 36}
+                    icon={<UserOutlined />}
+                    src={fotoPerfil ?? undefined}
+                    style={{ backgroundColor: '#0b5be1', cursor: 'pointer' }}
+                  />
+                </Badge>
+              </Dropdown>
+            </Space>
           </div>
 
-          <Button
-            icon={<LogoutOutlined />}
-            onClick={handleLogout}
-            ghost
-          >
-            Sair
-          </Button>
-        </Space>
-      </Header>
+          {isMobile && (
+            <div style={{ padding: '0 10px 10px 10px' }}>
+              <Select
+                loading={carregando}
+                style={{ width: '100%' }}
+                placeholder="Selecionar empresa"
+                value={empresaSelecionada ?? undefined}
+                onChange={(value) => setEmpresaSelecionada(Number(value))}
+                options={empresas.map((empresa) => ({ label: empresa.nome, value: empresa.id }))}
+                suffixIcon={carregando ? <Spin size="small" /> : undefined}
+                disabled={!empresas.length}
+              />
+            </div>
+          )}
 
-      <Content style={{ padding: '8px 8px', background: '#f5f7fb' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <Outlet />
+          {!isMobile && (
+            <>
+              <Menu
+                mode="horizontal"
+                selectedKeys={selectedTopKeys}
+                items={topLevelMenuItems}
+                onClick={({ key }) => handleTopLevelNavigation(String(key))}
+                style={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', paddingInline: 8 }}
+              />
+              <Menu
+                mode="horizontal"
+                selectedKeys={selectedSecondKeys}
+                items={secondLevelMenuItems}
+                onClick={({ key }) => handleSecondLevelNavigation(String(key))}
+                style={{ borderBottom: 'none', paddingInline: 8 }}
+              />
+            </>
+          )}
         </div>
-      </Content>
+
+        <Content style={{ padding: isMobile ? '10px' : '14px', background: '#f5f7fb' }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+            <Outlet />
+          </div>
+        </Content>
+      </Layout>
     </Layout>
   );
 }

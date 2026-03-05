@@ -489,15 +489,7 @@ function InventarioDados() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Inventário de Dados Pessoais
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Registre as categorias e os dados pessoais tratados pela organização.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => carregarDados(true)} />
           <Button

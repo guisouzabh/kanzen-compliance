@@ -9,7 +9,7 @@ const JWT_SECRET: Secret = (process.env.JWT_SECRET ?? 'changeme') as Secret;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '1h'; // string mesmo
 
 export async function registrarUsuarioService(dados: Usuario): Promise<Usuario> {
-  const { nome, email, senha, tenant_id, empresa_id, area_id, role } = dados;
+  const { nome, email, senha, foto_url, tenant_id, empresa_id, area_id, role } = dados;
 
   if (!senha) {
     throw new AppError('Senha é obrigatória', 400);
@@ -57,16 +57,17 @@ export async function registrarUsuarioService(dados: Usuario): Promise<Usuario> 
 
   const [result] = await pool.query(
     `
-      INSERT INTO usuarios (nome, email, senha_hash, tenant_id, empresa_id, area_id, role)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO usuarios (nome, email, senha_hash, foto_url, tenant_id, empresa_id, area_id, role)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `,
-    [nome, email, senha_hash, tenant_id, empresa_id ?? null, area_id ?? null, role ?? 'COLABORADOR']
+    [nome, email, senha_hash, foto_url ?? null, tenant_id, empresa_id ?? null, area_id ?? null, role ?? 'COLABORADOR']
   );
 
   return {
     id: (result as any).insertId,
     nome,
     email,
+    foto_url: foto_url ?? null,
     empresa_id: empresa_id ?? undefined,
     area_id: area_id ?? undefined,
     role: role ?? 'COLABORADOR'
@@ -95,6 +96,7 @@ export async function loginService(
     sub: usuario.id,
     email: usuario.email,
     nome: usuario.nome,
+    fotoUrl: usuario.foto_url ?? null,
     tenantId: usuario.tenant_id,
     empresaId: usuario.empresa_id ?? null,
     areaId: usuario.area_id ?? null,

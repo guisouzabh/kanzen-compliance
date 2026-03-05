@@ -25,6 +25,7 @@ import {
   ClusterOutlined
 } from '@ant-design/icons';
 import api from '../services/api';
+import { useEmpresaContext } from '../contexts/EmpresaContext';
 
 interface Area {
   id: number;
@@ -57,8 +58,23 @@ function Subareas() {
   const [modalAberta, setModalAberta] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [form] = Form.useForm();
+  const { empresaSelecionada } = useEmpresaContext();
 
   const estaEditando = useMemo(() => editandoId !== null, [editandoId]);
+
+  const areasFiltradas = useMemo(() => {
+    if (!empresaSelecionada) return [];
+    return areas.filter((area) => area.empresa_id === empresaSelecionada);
+  }, [areas, empresaSelecionada]);
+
+  const subareasFiltradas = useMemo(() => {
+    if (!empresaSelecionada) return [];
+    const areasSet = new Set(areasFiltradas.map((area) => area.id));
+    return subareas.filter((subarea) => {
+      if (subarea.empresa_id) return subarea.empresa_id === empresaSelecionada;
+      return areasSet.has(subarea.area_id);
+    });
+  }, [subareas, areasFiltradas, empresaSelecionada]);
 
   async function carregarAreas() {
     const response = await api.get('/areas');
@@ -158,16 +174,19 @@ function Subareas() {
             icon={<PlusOutlined />}
             onClick={() => {
               resetarFormulario();
+              if (areasFiltradas.length) {
+                form.setFieldsValue({ area_id: areasFiltradas[0].id });
+              }
               setModalAberta(true);
             }}
-            disabled={!areas.length}
+            disabled={!areasFiltradas.length}
           >
             Nova subárea
           </Button>
         </Space>
       </Flex>
 
-      {!areas.length && !carregando ? (
+      {!areasFiltradas.length && !carregando ? (
         <Card>
           <Empty description="Cadastre uma área antes de criar subáreas" />
         </Card>
@@ -175,12 +194,12 @@ function Subareas() {
         <Card title="Lista de subáreas">
           {carregando ? (
             <Skeleton active />
-          ) : subareas.length === 0 ? (
+          ) : subareasFiltradas.length === 0 ? (
             <Empty description="Nenhuma subárea cadastrada" />
           ) : (
             <Table
               rowKey="id"
-              dataSource={subareas}
+              dataSource={subareasFiltradas}
               pagination={false}
               size="middle"
               columns={[
@@ -297,7 +316,7 @@ function Subareas() {
           >
             <Select
               placeholder="Selecione a área"
-              options={areas.map((a) => ({
+              options={areasFiltradas.map((a) => ({
                 value: a.id,
                 label: a.nome,
                 icon: <ClusterOutlined />

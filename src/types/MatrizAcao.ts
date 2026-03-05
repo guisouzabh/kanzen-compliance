@@ -23,6 +23,7 @@ export interface MatrizAcao {
   origem_id?: number | null;
   responsavel_id?: number | null;
   responsavel_nome?: string | null;
+  tags?: string[];
   created_at?: string;
   updated_at?: string;
 }

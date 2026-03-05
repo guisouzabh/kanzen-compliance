@@ -4,6 +4,7 @@ export interface DiagnosticoLgpdResposta {
   execucao_id: number;
   pergunta_id: number;
   dominio?: string;
+  macro_dominio?: string;
   opcao: number;
   valor?: number;
   peso?: number;

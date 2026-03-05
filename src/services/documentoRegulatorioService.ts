@@ -52,7 +52,7 @@ export async function criarDocumentoRegulatorioService(
         exige_assinatura,
         exige_validade,
         ativo
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       dados.classificacao_id,

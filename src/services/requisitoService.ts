@@ -7,6 +7,9 @@ import {
   RequisitoComCheckins
 } from '../types/Requisito';
 import { pool } from '../config/db';
+import { buscarTagsMap, deletarTags, salvarTags } from './tagService';
+
+const TAG_ENTITY_REQUISITO = 'REQUISITO';
 
 async function validarArea(tenantId: number, areaId: number) {
   const areas = await tenantQuery<{ id: number }>(
@@ -61,44 +64,8 @@ async function validarRequisitoBase(requisitoBaseId: number) {
   }
 }
 
-async function salvarTags(tenantId: number, requisitoId: number, tags?: string[]) {
-  await tenantExecute(
-    tenantId,
-    'DELETE FROM requisito_tags WHERE tenant_id = ? AND requisito_id = ?',
-    [requisitoId]
-  );
-
-  if (!tags || !tags.length) return;
-
-  const insertSql =
-    'INSERT INTO requisito_tags (tenant_id, requisito_id, tag) VALUES (?, ?, ?)';
-
-  for (const tag of tags) {
-    await tenantExecute(tenantId, insertSql, [requisitoId, tag]);
-  }
-}
-
-async function buscarTagsMap(
-  tenantId: number,
-  requisitoIds: number[]
-): Promise<Record<number, string[]>> {
-  if (!requisitoIds.length) return {};
-
-  const rows = await tenantQuery<{ requisito_id: number; tag: string }>(
-    tenantId,
-    `SELECT requisito_id, tag
-       FROM requisito_tags
-      WHERE tenant_id = ? AND requisito_id IN (?)
-      ORDER BY id`,
-    [requisitoIds]
-  );
-
-  return rows.reduce<Record<number, string[]>>((acc, row) => {
-    acc[row.requisito_id] = acc[row.requisito_id] || [];
-    acc[row.requisito_id].push(row.tag);
-    return acc;
-  }, {});
-}
+const buscarTagsRequisitos = (tenantId: number, requisitoIds: number[]) =>
+  buscarTagsMap(tenantId, TAG_ENTITY_REQUISITO, requisitoIds);
 
 async function salvarOutrasAreas(
   tenantId: number,
@@ -165,7 +132,7 @@ export async function listarRequisitosService(tenantId: number): Promise<Requisi
 
   const ids = requisitos.map((r) => r.id!).filter(Boolean);
   const [tagsMap, outrasAreasMap] = await Promise.all([
-    buscarTagsMap(tenantId, ids),
+    buscarTagsRequisitos(tenantId, ids),
     buscarOutrasAreasMap(tenantId, ids)
   ]);
 
@@ -211,7 +178,7 @@ export async function listarRequisitosPorUsuarioService(
 
   const ids = requisitos.map((r) => r.id!).filter(Boolean);
   const [tagsMap, outrasAreasMap] = await Promise.all([
-    buscarTagsMap(tenantId, ids),
+    buscarTagsRequisitos(tenantId, ids),
     buscarOutrasAreasMap(tenantId, ids)
   ]);
 
@@ -286,7 +253,7 @@ export async function criarRequisitoService(
   ]);
 
   const id = (result as any).insertId;
-  await salvarTags(tenantId, id, tags);
+  await salvarTags(tenantId, TAG_ENTITY_REQUISITO, id, tags);
   await salvarOutrasAreas(tenantId, id, outras_areas_ids);
   await logChange('Requisito', 'CREATE', { tenantId, id, ...requisitoSemTags, tags, outras_areas_ids });
 
@@ -328,7 +295,7 @@ export async function obterRequisitoPorIdService(
     return null;
   }
 
-  const tagsMap = await buscarTagsMap(tenantId, [id]);
+  const tagsMap = await buscarTagsRequisitos(tenantId, [id]);
   const outrasAreasMap = await buscarOutrasAreasMap(tenantId, [id]);
   await logChange('Requisito', 'INFO', { tenantId, id });
   return {
@@ -400,7 +367,7 @@ export async function atualizarRequisitoService(
     return null;
   }
 
-  await salvarTags(tenantId, id, tags);
+  await salvarTags(tenantId, TAG_ENTITY_REQUISITO, id, tags);
   await salvarOutrasAreas(tenantId, id, outras_areas_ids);
   await logChange('Requisito', 'UPDATE', { tenantId, id, ...requisitoSemTags, tags, outras_areas_ids });
 
@@ -417,11 +384,7 @@ export async function deletarRequisitoService(
     'DELETE FROM requisito_checkins WHERE tenant_id = ? AND requisito_id = ?',
     [id]
   );
-  await tenantExecute(
-    tenantId,
-    'DELETE FROM requisito_tags WHERE tenant_id = ? AND requisito_id = ?',
-    [id]
-  );
+  await deletarTags(tenantId, TAG_ENTITY_REQUISITO, id);
   await tenantExecute(
     tenantId,
     'DELETE FROM requisito_outras_areas WHERE tenant_id = ? AND requisito_id = ?',

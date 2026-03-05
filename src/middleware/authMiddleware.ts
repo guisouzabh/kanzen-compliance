@@ -9,6 +9,7 @@ export interface AuthRequest extends Request {
     id: number;
     email: string;
     nome: string;
+    fotoUrl?: string | null;
     tenantId: number;
     empresaId?: number | null;
     areaId?: number | null;
@@ -36,6 +37,7 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
     id: decoded.sub,
     email: decoded.email,
     nome: decoded.nome,
+    fotoUrl: decoded.fotoUrl ?? null,
     tenantId: decoded.tenantId,
     empresaId: decoded.empresaId ?? null,
     areaId: decoded.areaId ?? null,

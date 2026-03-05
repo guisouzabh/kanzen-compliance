@@ -22,6 +22,7 @@ import {
   EditOutlined,
   FileTextOutlined,
   FilePdfOutlined,
+  FileWordOutlined,
   PlusOutlined,
   ReloadOutlined,
   SaveOutlined
@@ -275,20 +276,52 @@ function DocumentoConteudo() {
     janela.print();
   }
 
+  function extrairNomeArquivo(headersContentDisposition?: string) {
+    if (!headersContentDisposition) return null;
+    const utf8Match = headersContentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match?.[1]) {
+      return decodeURIComponent(utf8Match[1]);
+    }
+    const basicMatch = headersContentDisposition.match(/filename="?([^"]+)"?/i);
+    return basicMatch?.[1] ?? null;
+  }
+
+  async function handleExportDocx(conteudo: DocumentoConteudo) {
+    try {
+      const response = await api.get(`/documento-conteudo/${conteudo.id}/export/docx`, {
+        responseType: 'blob'
+      });
+
+      const contentDisposition = response.headers?.['content-disposition'] as string | undefined;
+      const titulo = conteudo.titulo_versao || `documento_v${conteudo.versao}`;
+      const fallback = `${titulo.replace(/[^a-zA-Z0-9_-]+/g, '_')}.docx`;
+      const fileName = extrairNomeArquivo(contentDisposition) || fallback;
+
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      message.success('Documento Word gerado com sucesso');
+    } catch (err: any) {
+      message.error(err?.response?.data?.erro || 'Erro ao exportar Word');
+    }
+  }
+
   const disableNovo = !documentosVisiveis.length;
   const documentoLabel = documentosEmpresa.find((d) => d.id === documentoSelecionado);
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Documento Conteúdo
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Crie versões em HTML para documentos da empresa.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => carregarDados(true)} />
           <Button
@@ -375,11 +408,14 @@ function DocumentoConteudo() {
                 {
                   title: 'Ações',
                   dataIndex: 'acoes',
-                  width: 260,
+                  width: 360,
                   render: (_: unknown, record: DocumentoConteudo) => (
                     <Space>
                       <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExportPdf(record)}>
                         Exportar PDF
+                      </Button>
+                      <Button size="small" icon={<FileWordOutlined />} onClick={() => handleExportDocx(record)}>
+                        Exportar Word
                       </Button>
                       <Button size="small" icon={<EditOutlined />} onClick={() => iniciarEdicao(record)}>
                         Editar

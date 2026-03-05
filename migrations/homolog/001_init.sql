@@ -174,17 +174,17 @@ CREATE TABLE `requisito_outras_areas` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- rlk.requisito_tags definição
+-- rlk.tenant_tags definição
 
-CREATE TABLE `requisito_tags` (
+CREATE TABLE `tenant_tags` (
   `id` int NOT NULL AUTO_INCREMENT,
   `tenant_id` int NOT NULL,
-  `requisito_id` int NOT NULL,
+  `entity_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_id` int NOT NULL,
   `tag` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_tags_tenant` (`tenant_id`),
-  KEY `fk_tag_requisito` (`requisito_id`),
-  CONSTRAINT `fk_tag_requisito` FOREIGN KEY (`requisito_id`) REFERENCES `requisitos` (`id`) ON DELETE CASCADE
+  KEY `idx_tags_entity` (`entity_type`,`entity_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=192 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

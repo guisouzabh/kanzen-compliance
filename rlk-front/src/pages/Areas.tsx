@@ -27,11 +27,7 @@ import {
   ClusterOutlined
 } from '@ant-design/icons';
 import api from '../services/api';
-
-interface Empresa {
-  id: number;
-  nome: string;
-}
+import { useEmpresaContext } from '../contexts/EmpresaContext';
 
 interface Unidade {
   id: number;
@@ -56,25 +52,25 @@ type AreaFormValues = Omit<Area, 'id' | 'empresa_nome' | 'unidade_nome'>;
 
 function Areas() {
   const [areas, setAreas] = useState<Area[]>([]);
-  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [unidades, setUnidades] = useState<Unidade[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [modalAberta, setModalAberta] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [form] = Form.useForm();
+  const { empresas, empresaSelecionada } = useEmpresaContext();
 
   const estaEditando = useMemo(() => editandoId !== null, [editandoId]);
   const unidadesFiltradas = useMemo(() => {
-    const empresaId = form.getFieldValue('empresa_id');
-    if (!empresaId) return unidades;
+    const empresaId = form.getFieldValue('empresa_id') ?? empresaSelecionada;
+    if (!empresaId) return [];
     return unidades.filter((u) => u.empresa_id === empresaId);
-  }, [unidades, form]);
+  }, [unidades, form, empresaSelecionada]);
 
-  async function carregarEmpresas() {
-    const response = await api.get('/empresas');
-    setEmpresas(response.data || []);
-  }
+  const areasFiltradas = useMemo(() => {
+    if (!empresaSelecionada) return [];
+    return areas.filter((area) => area.empresa_id === empresaSelecionada);
+  }, [areas, empresaSelecionada]);
 
   async function carregarUnidades() {
     const response = await api.get('/unidades');
@@ -84,7 +80,7 @@ function Areas() {
   async function carregarAreas(showMessage = false) {
     try {
       setCarregando(true);
-      await Promise.all([carregarEmpresas(), carregarUnidades()]);
+      await carregarUnidades();
       const response = await api.get('/areas');
       setAreas(response.data || []);
       if (showMessage) message.success('Áreas atualizadas');
@@ -206,16 +202,19 @@ function Areas() {
             icon={<PlusOutlined />}
             onClick={() => {
               resetarFormulario();
+              if (empresaSelecionada) {
+                form.setFieldsValue({ empresa_id: empresaSelecionada });
+              }
               setModalAberta(true);
             }}
-            disabled={!unidades.length}
+            disabled={!unidadesFiltradas.length}
           >
             Nova área
           </Button>
         </Space>
       </Flex>
 
-      {!unidades.length && !carregando ? (
+      {!unidadesFiltradas.length && !carregando ? (
         <Card>
           <Empty description="Cadastre uma unidade antes de criar áreas" />
         </Card>
@@ -223,12 +222,12 @@ function Areas() {
         <Card title="Lista de áreas">
           {carregando ? (
             <Skeleton active />
-          ) : areas.length === 0 ? (
+          ) : areasFiltradas.length === 0 ? (
             <Empty description="Nenhuma área cadastrada" />
           ) : (
             <Table
               rowKey="id"
-              dataSource={areas}
+              dataSource={areasFiltradas}
               pagination={false}
               size="middle"
               columns={[

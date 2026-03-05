@@ -4,7 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 
 export const registrarUsuario = asyncHandler(async (req: Request, res: Response) => {
   // 🔑 Adicione 'tenantId' à desestruturação de req.body
-  const { nome, email, senha, tenant_id, empresa_id, area_id } = req.body;
+  const { nome, email, senha, foto_url, tenant_id, empresa_id, area_id } = req.body;
 
   // 🚨 Adicione a validação para tenantId
   if (!nome || !email || !senha || !tenant_id) {
@@ -16,6 +16,7 @@ export const registrarUsuario = asyncHandler(async (req: Request, res: Response)
     nome,
     email,
     senha,
+    foto_url,
     tenant_id,
     empresa_id,
     area_id,

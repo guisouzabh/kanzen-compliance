@@ -4,6 +4,7 @@ export interface DiagnosticoLgpdPergunta {
   modelo_id: number;
   codigo: string;
   dominio: string;
+  macro_dominio?: string;
   pergunta: string;
   opcao_0: string;
   opcao_1: string;

@@ -4,6 +4,7 @@ export interface Usuario {
   email: string;
   senha?: string;      // só na entrada
   senha_hash?: string; // vindo do banco
+  foto_url?: string | null;
   tenant_id?: number;
   empresa_id?: number | null;
   area_id?: number | null;

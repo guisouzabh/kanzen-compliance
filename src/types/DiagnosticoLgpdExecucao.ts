@@ -5,6 +5,10 @@ export interface DiagnosticoLgpdExecucao {
   empresa_nome?: string;
   modelo_id: number;
   modelo_nome?: string;
+  modelo_descricao?: string | null;
+  dm_escopo_id?: number;
+  escopo_nome?: string | null;
+  escopo_descricao?: string | null;
   status?: string;
   nota_geral?: number;
   total_peso?: number;

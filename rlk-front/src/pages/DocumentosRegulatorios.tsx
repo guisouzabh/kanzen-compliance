@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Button,
   Card,
@@ -80,6 +81,7 @@ const impactoOptions = [
 ];
 
 function DocumentosRegulatorios() {
+  const navigate = useNavigate();
   const [documentos, setDocumentos] = useState<DocumentoRegulatorio[]>([]);
   const [classificacoes, setClassificacoes] = useState<Classificacao[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -186,15 +188,7 @@ function DocumentosRegulatorios() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Documentos Regulatórios
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Cadastre documentos regulatórios por classificação, periodicidade e obrigatoriedade.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => carregarDocumentos(true)} />
           <Button
@@ -283,9 +277,22 @@ function DocumentosRegulatorios() {
                 {
                   title: 'Ações',
                   dataIndex: 'acoes',
-                  width: 180,
+                  width: 290,
                   render: (_: unknown, record: DocumentoRegulatorio) => (
                     <Space>
+                      <Button
+                        size="small"
+                        icon={<FileTextOutlined />}
+                        onClick={() =>
+                          navigate(`/documentos-regulatorios/${record.id}/secoes`, {
+                            state: {
+                              documentoNome: record.nome
+                            }
+                          })
+                        }
+                      >
+                        Seções
+                      </Button>
                       <Button size="small" icon={<EditOutlined />} onClick={() => iniciarEdicao(record)}>
                         Editar
                       </Button>

@@ -532,15 +532,7 @@ function Requisitos() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Requisitos
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Lista de requisitos legais, internos e externos com status e origem.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Space>
           <Segmented
             value={visualizacao}

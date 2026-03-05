@@ -21,7 +21,8 @@ export const matrizAcaoSchema = z
     origem: z.string().max(2000, 'Origem muito longa').optional().nullable(),
     origem_typ: z.string().max(50, 'origem_typ muito longo').optional().nullable(),
     origem_id: z.number().int().positive().optional().nullable(),
-    responsavel_id: z.number().int().positive().optional().nullable()
+    responsavel_id: z.number().int().positive().optional().nullable(),
+    tags: z.array(z.string().min(1)).max(50).optional()
   })
   .refine((dados) => !dados.origem_id || !!dados.origem_typ, {
     message: 'origem_typ é obrigatório quando origem_id é informado',

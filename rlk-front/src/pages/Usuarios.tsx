@@ -25,11 +25,7 @@ import {
   ClusterOutlined
 } from '@ant-design/icons';
 import api from '../services/api';
-
-interface Empresa {
-  id: number;
-  nome: string;
-}
+import { useEmpresaContext } from '../contexts/EmpresaContext';
 
 interface Area {
   id: number;
@@ -58,32 +54,37 @@ interface UsuarioFormValues {
 
 function Usuarios() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [modalAberta, setModalAberta] = useState(false);
   const [form] = Form.useForm<UsuarioFormValues>();
+  const { empresas, empresaSelecionada } = useEmpresaContext();
+
+  const empresaIdFormulario = Form.useWatch('empresa_id', form);
+  const empresaFiltro = empresaIdFormulario ?? empresaSelecionada;
 
   const areasFiltradas = useMemo(() => {
-    const empresaId = form.getFieldValue('empresa_id');
-    if (!empresaId) return areas;
-    return areas.filter((a) => a.empresa_id === empresaId);
-  }, [areas, form]);
+    if (!empresaFiltro) return [];
+    return areas.filter((a) => a.empresa_id === empresaFiltro);
+  }, [areas, empresaFiltro]);
 
-  async function carregarEmpresasEAreas() {
-    const [empresasResp, areasResp] = await Promise.all([
-      api.get('/empresas'),
-      api.get('/areas')
-    ]);
-    setEmpresas(empresasResp.data || []);
+  const usuariosFiltrados = useMemo(() => {
+    if (!empresaSelecionada) return [];
+    return usuarios.filter(
+      (usuario) => usuario.empresa_id === empresaSelecionada || usuario.empresa_id == null
+    );
+  }, [usuarios, empresaSelecionada]);
+
+  async function carregarAreas() {
+    const areasResp = await api.get('/areas');
     setAreas(areasResp.data || []);
   }
 
   async function carregarUsuarios(showMessage = false) {
     try {
       setCarregando(true);
-      await carregarEmpresasEAreas();
+      await carregarAreas();
       const response = await api.get('/usuarios');
       setUsuarios(response.data || []);
       if (showMessage) message.success('Usuários atualizados');
@@ -100,6 +101,9 @@ function Usuarios() {
 
   function abrirModal() {
     form.resetFields();
+    if (empresaSelecionada) {
+      form.setFieldsValue({ empresa_id: empresaSelecionada });
+    }
     setModalAberta(true);
   }
 
@@ -149,12 +153,12 @@ function Usuarios() {
       <Card title="Lista de usuários">
         {carregando ? (
           <Skeleton active />
-        ) : usuarios.length === 0 ? (
+        ) : usuariosFiltrados.length === 0 ? (
           <Empty description="Nenhum usuário cadastrado" />
         ) : (
           <Table
             rowKey="id"
-            dataSource={usuarios}
+            dataSource={usuariosFiltrados}
             pagination={false}
             size="middle"
             columns={[

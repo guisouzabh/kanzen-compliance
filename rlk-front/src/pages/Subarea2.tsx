@@ -25,6 +25,7 @@ import {
   ClusterOutlined
 } from '@ant-design/icons';
 import api from '../services/api';
+import { useEmpresaContext } from '../contexts/EmpresaContext';
 
 interface SubArea {
   id: number;
@@ -61,8 +62,25 @@ function Subarea2() {
   const [modalAberta, setModalAberta] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [form] = Form.useForm();
+  const { empresaSelecionada } = useEmpresaContext();
 
   const estaEditando = useMemo(() => editandoId !== null, [editandoId]);
+
+  const subareasFiltradas = useMemo(() => {
+    if (!empresaSelecionada) return [];
+    return subareas.filter((subarea) =>
+      subarea.empresa_id ? subarea.empresa_id === empresaSelecionada : true
+    );
+  }, [subareas, empresaSelecionada]);
+
+  const subareas2Filtradas = useMemo(() => {
+    if (!empresaSelecionada) return [];
+    const subareasSet = new Set(subareasFiltradas.map((subarea) => subarea.id));
+    return subareas2.filter((subarea2) => {
+      if (subarea2.empresa_id) return subarea2.empresa_id === empresaSelecionada;
+      return subareasSet.has(subarea2.subarea_id);
+    });
+  }, [subareas2, subareasFiltradas, empresaSelecionada]);
 
   async function carregarSubareas() {
     const response = await api.get('/subareas');
@@ -162,16 +180,19 @@ function Subarea2() {
             icon={<PlusOutlined />}
             onClick={() => {
               resetarFormulario();
+              if (subareasFiltradas.length) {
+                form.setFieldsValue({ subarea_id: subareasFiltradas[0].id });
+              }
               setModalAberta(true);
             }}
-            disabled={!subareas.length}
+            disabled={!subareasFiltradas.length}
           >
             Nova SubÁrea 2
           </Button>
         </Space>
       </Flex>
 
-      {!subareas.length && !carregando ? (
+      {!subareasFiltradas.length && !carregando ? (
         <Card>
           <Empty description="Cadastre uma subárea antes de criar SubÁrea 2" />
         </Card>
@@ -179,12 +200,12 @@ function Subarea2() {
         <Card title="Lista de SubÁrea 2">
           {carregando ? (
             <Skeleton active />
-          ) : subareas2.length === 0 ? (
+          ) : subareas2Filtradas.length === 0 ? (
             <Empty description="Nenhum registro cadastrado" />
           ) : (
             <Table
               rowKey="id"
-              dataSource={subareas2}
+              dataSource={subareas2Filtradas}
               pagination={false}
               size="middle"
               columns={[
@@ -313,7 +334,7 @@ function Subarea2() {
           >
             <Select
               placeholder="Selecione a subárea"
-              options={subareas.map((s) => ({
+              options={subareasFiltradas.map((s) => ({
                 value: s.id,
                 label: s.nome,
                 icon: <ClusterOutlined />

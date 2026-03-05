@@ -182,15 +182,6 @@ function PainelMaturidadeSancoes() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <div>
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          Painel de Maturidade e Sanções
-        </Typography.Title>
-        <Typography.Text type="secondary">
-          Visualize todos os níveis e destaque a posição atual da empresa selecionada.
-        </Typography.Text>
-      </div>
-
       {!empresaSelecionada ? (
         <Card>
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>

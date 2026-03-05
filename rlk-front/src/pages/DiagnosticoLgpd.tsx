@@ -12,6 +12,8 @@ import {
   Popconfirm,
   Progress,
   Radio,
+  Row,
+  Col,
   Select,
   Space,
   Switch,
@@ -40,14 +42,31 @@ import {
 } from '@ant-design/icons';
 import api from '../services/api';
 import { useEmpresaContext } from '../contexts/EmpresaContext';
+import {
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer
+} from 'recharts';
 
 interface DiagnosticoModelo {
   id: number;
   nome: string;
+  descricao?: string | null;
+  dm_escopo_id?: number;
+  escopo_nome?: string | null;
   versao?: number;
   ativo?: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+interface DmEscopo {
+  id: number;
+  nome: string;
+  descricao?: string | null;
 }
 
 interface DiagnosticoPergunta {
@@ -55,6 +74,7 @@ interface DiagnosticoPergunta {
   modelo_id: number;
   codigo: string;
   dominio: string;
+  macro_dominio?: string;
   pergunta: string;
   opcao_0: string;
   opcao_1: string;
@@ -93,6 +113,22 @@ interface DiagnosticoResultadoDominio {
   pontos?: number;
 }
 
+interface DiagnosticoResultadoMacro {
+  macro_dominio: string;
+  nota: number;
+  total_peso?: number;
+  max_pontos?: number;
+  pontos?: number;
+}
+
+interface DiagnosticoAcaoSugerida {
+  acao: string;
+  objetivo?: string | null;
+  macro_dominio?: string | null;
+  prioridade?: number;
+  esforco?: number;
+}
+
 function formatNota(value?: number | string) {
   if (value === null || value === undefined) return '0.00';
   const num = typeof value === 'number' ? value : Number(value);
@@ -100,8 +136,26 @@ function formatNota(value?: number | string) {
   return num.toFixed(2);
 }
 
+function normalizarNota(value?: number | string) {
+  if (value === null || value === undefined) return 0;
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isNaN(num) ? 0 : num;
+}
+
+function obterNivelMaturidade(nota: number) {
+  if (nota < 20) return 'Inicial';
+  if (nota < 40) return 'Gerenciado';
+  if (nota < 60) return 'Definido';
+  if (nota < 80) return 'Qualidade';
+  return 'Otimização';
+}
+
+const coresDominio = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#17becf'];
+
 type ModeloFormValues = {
   nome: string;
+  descricao?: string | null;
+  dm_escopo_id: number;
   versao?: number;
   ativo?: boolean;
 };
@@ -110,6 +164,7 @@ type PerguntaFormValues = {
   modelo_id: number;
   codigo: string;
   dominio: string;
+  macro_dominio: string;
   pergunta: string;
   opcao_0: string;
   opcao_1: string;
@@ -130,14 +185,29 @@ const statusColor: Record<string, string> = {
   FINALIZADO: 'green'
 };
 
+const macroDominiosPadrao = [
+  'Governança e Cultura',
+  'Bases Legais e Transparência',
+  'Direitos do Titular',
+  'Inventário e Registro',
+  'Segurança e Continuidade',
+  'Terceiros e Compartilhamento',
+  'Dados Sensíveis e Impacto'
+];
+
 function DiagnosticoLgpd() {
   const { empresas, empresaSelecionada } = useEmpresaContext();
+  const [escopos, setEscopos] = useState<DmEscopo[]>([]);
   const [modelos, setModelos] = useState<DiagnosticoModelo[]>([]);
   const [perguntasModelo, setPerguntasModelo] = useState<DiagnosticoPergunta[]>([]);
   const [perguntasExecucao, setPerguntasExecucao] = useState<DiagnosticoPergunta[]>([]);
   const [execucoes, setExecucoes] = useState<DiagnosticoExecucao[]>([]);
   const [resultados, setResultados] = useState<DiagnosticoResultadoDominio[]>([]);
+  const [resultadosMacro, setResultadosMacro] = useState<DiagnosticoResultadoMacro[]>([]);
   const [analisePorExecucao, setAnalisePorExecucao] = useState<Record<number, string>>({});
+  const [acoesPorExecucao, setAcoesPorExecucao] = useState<
+    Record<number, DiagnosticoAcaoSugerida[]>
+  >({});
 
   const [carregandoModelos, setCarregandoModelos] = useState(false);
   const [carregandoPerguntas, setCarregandoPerguntas] = useState(false);
@@ -146,6 +216,9 @@ function DiagnosticoLgpd() {
   const [carregandoAnalise, setCarregandoAnalise] = useState(false);
   const [exportandoPdfId, setExportandoPdfId] = useState<number | null>(null);
   const [gerandoAnaliseId, setGerandoAnaliseId] = useState<number | null>(null);
+  const [modalAcoesAberto, setModalAcoesAberto] = useState(false);
+  const [acoesSelecionadas, setAcoesSelecionadas] = useState<number[]>([]);
+  const [salvandoAcoes, setSalvandoAcoes] = useState(false);
 
   const [modeloSelecionadoId, setModeloSelecionadoId] = useState<number | null>(null);
 
@@ -231,6 +304,15 @@ function DiagnosticoLgpd() {
     }
   }
 
+  async function carregarEscopos() {
+    try {
+      const resp = await api.get('/dm-escopos');
+      setEscopos(resp.data || []);
+    } catch {
+      setEscopos([]);
+    }
+  }
+
   async function carregarPerguntasModelo(modeloId: number, showMessage = false) {
     try {
       setCarregandoPerguntas(true);
@@ -283,9 +365,9 @@ function DiagnosticoLgpd() {
       setCarregandoAnalise(true);
       const resp = await api.post(`/diagnosticos/execucoes/${execucaoId}/analise`);
       const texto = resp.data?.texto ?? '';
-      if (texto) {
-        setAnalisePorExecucao((prev) => ({ ...prev, [execucaoId]: texto }));
-      }
+      const acoes = resp.data?.acoes_sugeridas ?? [];
+      if (texto) setAnalisePorExecucao((prev) => ({ ...prev, [execucaoId]: texto }));
+      setAcoesPorExecucao((prev) => ({ ...prev, [execucaoId]: acoes }));
     } catch (err: any) {
       message.error(err?.response?.data?.erro || 'Erro ao gerar análise');
     } finally {
@@ -302,10 +384,72 @@ function DiagnosticoLgpd() {
       .replace(/'/g, '&#039;');
   }
 
+  function gerarRadarSvg(resultadosLocal: DiagnosticoResultadoDominio[]) {
+    const dados = resultadosLocal.map((r) => ({
+      dominio: r.dominio,
+      nota: normalizarNota(r.nota)
+    }));
+    if (dados.length < 3) {
+      return '<div style="font-size:12px;color:#6b7280">Sem dados suficientes para o radar.</div>';
+    }
+
+    const size = 220;
+    const center = size / 2;
+    const radius = 80;
+    const levels = 4;
+    const angleStep = (Math.PI * 2) / dados.length;
+
+    const grid = Array.from({ length: levels }, (_, i) => {
+      const r = (radius * (i + 1)) / levels;
+      return `<circle cx="${center}" cy="${center}" r="${r}" fill="none" stroke="#e5e7eb" />`;
+    }).join('');
+
+    const axes = dados
+      .map((_, i) => {
+        const angle = -Math.PI / 2 + angleStep * i;
+        const x = center + radius * Math.cos(angle);
+        const y = center + radius * Math.sin(angle);
+        return `<line x1="${center}" y1="${center}" x2="${x}" y2="${y}" stroke="#e5e7eb" />`;
+      })
+      .join('');
+
+    const points = dados
+      .map((d, i) => {
+        const angle = -Math.PI / 2 + angleStep * i;
+        const r = (radius * d.nota) / 100;
+        const x = center + r * Math.cos(angle);
+        const y = center + r * Math.sin(angle);
+        return `${x},${y}`;
+      })
+      .join(' ');
+
+    const labels = dados
+      .map((d, i) => {
+        const angle = -Math.PI / 2 + angleStep * i;
+        const r = radius + 16;
+        const x = center + r * Math.cos(angle);
+        const y = center + r * Math.sin(angle);
+        const anchor = Math.abs(Math.cos(angle)) < 0.1 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end';
+        return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="10" fill="#374151">${escapeHtml(d.dominio)}</text>`;
+      })
+      .join('');
+
+    return `
+      <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        ${grid}
+        ${axes}
+        <polygon points="${points}" fill="#0b5be1" fill-opacity="0.35" stroke="#0b5be1" />
+        ${labels}
+      </svg>
+    `;
+  }
+
   function gerarPdf(
     execucao: DiagnosticoExecucao,
     resultadosLocal: DiagnosticoResultadoDominio[],
-    analiseTexto: string
+    analiseTexto: string,
+    labelDominio: string,
+    acoesSugeridas: DiagnosticoAcaoSugerida[]
   ) {
     const empresaNome =
       execucao.empresa_nome || empresas.find((e) => e.id === execucao.empresa_id)?.nome || 'Empresa';
@@ -313,16 +457,27 @@ function DiagnosticoLgpd() {
       execucao.modelo_nome || modelos.find((m) => m.id === execucao.modelo_id)?.nome || 'Modelo';
     const data = new Date().toLocaleDateString('pt-BR');
 
-    const linhas = resultadosLocal
-      .map(
-        (r) => `
-        <tr>
-          <td>${escapeHtml(r.dominio)}</td>
-          <td>${formatNota(r.nota ?? 0)}</td>
-          <td>${formatNota(r.pontos ?? 0)} / ${r.max_pontos ?? 0}</td>
-        </tr>
-      `
-      )
+    const resultadosOrdenadosLocal = [...resultadosLocal].sort((a, b) =>
+      a.dominio.localeCompare(b.dominio)
+    );
+    const notaGeral = normalizarNota(execucao.nota_geral);
+    const nivel = obterNivelMaturidade(notaGeral);
+    const alerta = resultadosOrdenadosLocal.some((r) => normalizarNota(r.nota) === 0);
+
+    const barras = resultadosOrdenadosLocal
+      .map((r, idx) => {
+        const nota = normalizarNota(r.nota);
+        const cor = coresDominio[idx % coresDominio.length];
+        return `
+          <div class="bar-row">
+            <div class="bar-label">${escapeHtml(r.dominio)}</div>
+            <div class="bar-value">${formatNota(nota)}</div>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.round(nota)}%; background:${cor};"></div>
+          </div>
+        `;
+      })
       .join('');
 
     const paragrafos = (analiseTexto || '')
@@ -330,6 +485,22 @@ function DiagnosticoLgpd() {
       .map((p) => p.trim())
       .filter(Boolean)
       .map((p) => `<p>${escapeHtml(p)}</p>`)
+      .join('');
+
+    const acoesHtml = (acoesSugeridas || [])
+      .map((acao) => {
+        const detalhes = [
+          acao.macro_dominio ? `Macro: ${acao.macro_dominio}` : null,
+          acao.prioridade ? `Prioridade: ${acao.prioridade}` : null,
+          acao.esforco ? `Esforço: ${acao.esforco}` : null
+        ]
+          .filter(Boolean)
+          .join(' • ');
+        const objetivo = acao.objetivo ? ` — ${acao.objetivo}` : '';
+        return `<li>${escapeHtml(acao.acao)}${escapeHtml(objetivo)}${
+          detalhes ? `<div class="meta">${escapeHtml(detalhes)}</div>` : ''
+        }</li>`;
+      })
       .join('');
 
     const html = `<!doctype html>
@@ -340,38 +511,78 @@ function DiagnosticoLgpd() {
     <style>
       body { font-family: Arial, sans-serif; color: #1f2a37; padding: 24px; }
       h1 { font-size: 20px; margin-bottom: 4px; }
-      h2 { font-size: 16px; margin: 24px 0 8px; }
-      .meta { color: #6b7280; font-size: 12px; margin-bottom: 16px; }
-      .badge { display: inline-block; padding: 6px 10px; border-radius: 8px; background: #eef2ff; margin-right: 8px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-      th, td { border-bottom: 1px solid #e5e7eb; padding: 8px; text-align: left; font-size: 12px; }
-      th { background: #f3f4f6; }
+      h2 { font-size: 14px; margin: 16px 0 8px; }
+      .meta { color: #6b7280; font-size: 12px; margin-bottom: 12px; }
+      .badge { display: inline-block; padding: 6px 10px; border-radius: 8px; background: #eef2ff; margin-right: 8px; margin-bottom: 8px; font-size: 12px; }
+      .summary { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; margin: 16px 0; }
+      .summary-label { color: #6b7280; font-size: 12px; }
+      .summary-value { font-size: 22px; font-weight: bold; }
+      .summary-right { text-align: right; }
+      .summary-tag { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #e0f2fe; color: #0369a1; font-size: 11px; margin-bottom: 6px; }
+      .summary-bar { width: 180px; height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+      .summary-bar-fill { height: 100%; background: #0b5be1; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+      .card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; }
+      .radar { display: flex; justify-content: center; align-items: center; min-height: 240px; }
+      .alert { padding: 8px 10px; border-radius: 8px; font-size: 12px; margin-bottom: 12px; }
+      .alert-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+      .alert-ok { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+      .bar-row { display: flex; justify-content: space-between; font-size: 12px; margin-top: 6px; }
+      .bar-track { width: 100%; height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-bottom: 4px; }
+      .bar-fill { height: 100%; }
       p { font-size: 12px; line-height: 1.6; margin: 0 0 12px; white-space: pre-wrap; }
+      @media print {
+        .grid { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body>
-    <h1>Diagnóstico LGPD</h1>
+    <h1>Resultado do Diagnóstico</h1>
     <div class="meta">Data: ${data}</div>
     <div class="badge">Empresa: ${escapeHtml(empresaNome)}</div>
     <div class="badge">Modelo: ${escapeHtml(modeloNome)}</div>
-    <div class="badge">Nota geral: ${formatNota(execucao.nota_geral ?? 0)}</div>
 
-    <h2>Resultados por domínio</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Domínio</th>
-          <th>Nota</th>
-          <th>Pontuação</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${linhas}
-      </tbody>
-    </table>
+    <div class="summary">
+      <div>
+        <div class="summary-label">Total de conformidade</div>
+        <div class="summary-value">${Math.round(notaGeral)}%</div>
+      </div>
+      <div class="summary-right">
+        <div class="summary-tag">${escapeHtml(nivel)}</div>
+        <div class="summary-bar">
+          <div class="summary-bar-fill" style="width:${Math.round(notaGeral)}%"></div>
+        </div>
+      </div>
+    </div>
 
-    <h2>Diagnóstico textual</h2>
-    ${paragrafos || '<p>Sem análise disponível.</p>'}
+    <div class="grid">
+      <div class="card">
+        <h2>Mapa de maturidade</h2>
+        <div class="radar">${gerarRadarSvg(resultadosOrdenadosLocal)}</div>
+      </div>
+      <div class="card">
+        <h2>Alertas</h2>
+        <div class="alert ${alerta ? 'alert-danger' : 'alert-ok'}">
+          ${alerta ? 'Alto Risco Regulatório' : 'Sem alertas críticos'}
+        </div>
+        <h2>Pontuação por ${labelDominio}</h2>
+        ${barras || '<div class="meta">Sem dados</div>'}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Diagnóstico textual</h2>
+      ${paragrafos || '<p>Sem análise disponível.</p>'}
+    </div>
+
+    <div class="card">
+      <h2>Ações sugeridas</h2>
+      ${
+        acoesHtml
+          ? `<ul style="padding-left:18px; margin: 0;">${acoesHtml}</ul>`
+          : '<div class="meta">Sem ações sugeridas.</div>'
+      }
+    </div>
   </body>
 </html>`;
 
@@ -395,17 +606,39 @@ function DiagnosticoLgpd() {
     }
     setExportandoPdfId(execucao.id);
     try {
-      const resultadosResp = await api.get(`/diagnosticos/execucoes/${execucao.id}/resultados`);
-      const resultadosLocal: DiagnosticoResultadoDominio[] = resultadosResp.data || [];
+      const [respDom, respMacro] = await Promise.all([
+        api.get(`/diagnosticos/execucoes/${execucao.id}/resultados`),
+        api.get(`/diagnosticos/execucoes/${execucao.id}/resultados-macro`)
+      ]);
+      const usaMacro = respMacro.data?.length > 0;
+      const resultadosLocal: DiagnosticoResultadoDominio[] =
+        usaMacro
+          ? respMacro.data.map((r: DiagnosticoResultadoMacro) => ({
+              dominio: r.macro_dominio,
+              nota: r.nota,
+              total_peso: r.total_peso,
+              max_pontos: r.max_pontos,
+              pontos: r.pontos
+            }))
+          : respDom.data || [];
       let texto = analisePorExecucao[execucao.id];
+      let acoesSugeridas = acoesPorExecucao[execucao.id] || [];
       if (!texto) {
         const analiseResp = await api.post(`/diagnosticos/execucoes/${execucao.id}/analise`);
         texto = analiseResp.data?.texto ?? '';
+        acoesSugeridas = analiseResp.data?.acoes_sugeridas ?? [];
         if (texto) {
           setAnalisePorExecucao((prev) => ({ ...prev, [execucao.id]: texto! }));
         }
+        setAcoesPorExecucao((prev) => ({ ...prev, [execucao.id]: acoesSugeridas }));
       }
-      gerarPdf(execucao, resultadosLocal, texto || '');
+      gerarPdf(
+        execucao,
+        resultadosLocal,
+        texto || '',
+        usaMacro ? 'macro domínio' : 'domínio',
+        acoesSugeridas
+      );
     } catch (err: any) {
       message.error(err?.response?.data?.erro || 'Erro ao exportar PDF');
     } finally {
@@ -437,8 +670,12 @@ function DiagnosticoLgpd() {
     try {
       setCarregandoResultados(true);
       setExecucaoSelecionada(execucao);
-      const resp = await api.get(`/diagnosticos/execucoes/${execucao.id}/resultados`);
-      setResultados(resp.data || []);
+      const [respDom, respMacro] = await Promise.all([
+        api.get(`/diagnosticos/execucoes/${execucao.id}/resultados`),
+        api.get(`/diagnosticos/execucoes/${execucao.id}/resultados-macro`)
+      ]);
+      setResultados(respDom.data || []);
+      setResultadosMacro(respMacro.data || []);
       setModalResultadosAberto(true);
       await carregarAnalise(execucao.id, forceAnalise);
     } catch (err: any) {
@@ -461,8 +698,53 @@ function DiagnosticoLgpd() {
     }
   }
 
+  function abrirModalAcoes(execucao: DiagnosticoExecucao) {
+    const acoes = acoesPorExecucao[execucao.id] || [];
+    if (!acoes.length) {
+      message.info('Nenhuma ação sugerida disponível para este diagnóstico');
+      return;
+    }
+    setExecucaoSelecionada(execucao);
+    setAcoesSelecionadas(acoes.map((_, idx) => idx));
+    setModalAcoesAberto(true);
+  }
+
+  async function cadastrarAcoesSelecionadas() {
+    if (!execucaoSelecionada) return;
+    const acoes = acoesPorExecucao[execucaoSelecionada.id] || [];
+    const selecionadas = acoes
+      .map((acao, idx) => ({ ...acao, id: idx }))
+      .filter((acao) => acoesSelecionadas.includes(acao.id))
+      .map(({ acao, objetivo, macro_dominio, prioridade, esforco }) => ({
+        acao,
+        objetivo,
+        macro_dominio,
+        prioridade,
+        esforco
+      }));
+
+    if (!selecionadas.length) {
+      message.warning('Selecione ao menos uma ação');
+      return;
+    }
+
+    setSalvandoAcoes(true);
+    try {
+      await api.post(`/diagnosticos/execucoes/${execucaoSelecionada.id}/acoes`, {
+        acoes: selecionadas
+      });
+      message.success('Ações cadastradas na matriz');
+      setModalAcoesAberto(false);
+    } catch (err: any) {
+      message.error(err?.response?.data?.erro || 'Erro ao cadastrar ações');
+    } finally {
+      setSalvandoAcoes(false);
+    }
+  }
+
   useEffect(() => {
     carregarModelos();
+    carregarEscopos();
     carregarExecucoes();
   }, []);
 
@@ -477,7 +759,11 @@ function DiagnosticoLgpd() {
   function abrirNovoModelo() {
     setEditandoModelo(null);
     formModelo.resetFields();
-    formModelo.setFieldsValue({ versao: 1, ativo: true });
+    formModelo.setFieldsValue({
+      versao: 1,
+      ativo: true,
+      dm_escopo_id: escopos[0]?.id
+    });
     setModalModeloAberto(true);
   }
 
@@ -485,6 +771,8 @@ function DiagnosticoLgpd() {
     setEditandoModelo(item);
     formModelo.setFieldsValue({
       nome: item.nome,
+      descricao: item.descricao ?? undefined,
+      dm_escopo_id: item.dm_escopo_id,
       versao: item.versao ?? 1,
       ativo: item.ativo ?? true
     });
@@ -521,7 +809,8 @@ function DiagnosticoLgpd() {
       modelo_id: modeloSelecionadoId,
       peso: 1,
       ordem: perguntasModelo.length + 1,
-      ativo: true
+      ativo: true,
+      macro_dominio: macroDominiosPadrao[0]
     });
     setModalPerguntaAberta(true);
   }
@@ -532,6 +821,7 @@ function DiagnosticoLgpd() {
       modelo_id: item.modelo_id,
       codigo: item.codigo,
       dominio: item.dominio,
+      macro_dominio: item.macro_dominio ?? macroDominiosPadrao[0],
       pergunta: item.pergunta,
       opcao_0: item.opcao_0,
       opcao_1: item.opcao_1,
@@ -756,8 +1046,19 @@ function DiagnosticoLgpd() {
       render: (value: string, record: DiagnosticoModelo) => (
         <Space direction="vertical" size={0}>
           <Typography.Text strong>{value}</Typography.Text>
+          {record.descricao ? (
+            <Typography.Text type="secondary">{record.descricao}</Typography.Text>
+          ) : null}
           <Typography.Text type="secondary">Versão {record.versao ?? 1}</Typography.Text>
         </Space>
+      )
+    },
+    {
+      title: 'Escopo',
+      dataIndex: 'escopo_nome',
+      width: 200,
+      render: (value: string, record: DiagnosticoModelo) => (
+        <Tag color="geekblue">{value || escopos.find((e) => e.id === record.dm_escopo_id)?.nome || 'Escopo'}</Tag>
       )
     },
     {
@@ -783,6 +1084,7 @@ function DiagnosticoLgpd() {
   const colunasPerguntas = [
     { title: 'Código', dataIndex: 'codigo', width: 110 },
     { title: 'Domínio', dataIndex: 'dominio', width: 150 },
+    { title: 'Macro domínio', dataIndex: 'macro_dominio', width: 180 },
     { title: 'Pergunta', dataIndex: 'pergunta' },
     {
       title: 'Peso',
@@ -905,22 +1207,67 @@ function DiagnosticoLgpd() {
     }
   ];
 
+  const colunasAcoesSugeridas = [
+    { title: 'Ação', dataIndex: 'acao' },
+    {
+      title: 'Objetivo',
+      dataIndex: 'objetivo',
+      render: (value?: string) => value || '-'
+    },
+    {
+      title: 'Macro domínio',
+      dataIndex: 'macro_dominio',
+      render: (value?: string) => value || '-'
+    },
+    {
+      title: 'Prioridade',
+      dataIndex: 'prioridade',
+      width: 90,
+      render: (value?: number) => value ?? 3
+    },
+    {
+      title: 'Esforço',
+      dataIndex: 'esforco',
+      width: 80,
+      render: (value?: number) => value ?? 3
+    }
+  ];
+
   const analiseAtual =
     execucaoSelecionada && execucaoSelecionada.id
       ? analisePorExecucao[execucaoSelecionada.id]
       : '';
+  const acoesSugeridasAtual =
+    execucaoSelecionada && execucaoSelecionada.id
+      ? acoesPorExecucao[execucaoSelecionada.id] || []
+      : [];
+  const acoesSugeridasTabela = acoesSugeridasAtual.map((acao, idx) => ({ ...acao, id: idx }));
+
+  const resultadosOrdenados = useMemo(() => {
+    if (resultadosMacro.length > 0) {
+      return resultadosMacro
+        .map((r) => ({
+          dominio: r.macro_dominio,
+          nota: r.nota,
+          total_peso: r.total_peso,
+          max_pontos: r.max_pontos,
+          pontos: r.pontos
+        }))
+        .sort((a, b) => a.dominio.localeCompare(b.dominio));
+    }
+    return [...resultados].sort((a, b) => a.dominio.localeCompare(b.dominio));
+  }, [resultados, resultadosMacro]);
+
+  const usaMacroDominio = resultadosMacro.length > 0;
+  const labelDominio = usaMacroDominio ? 'macro domínio' : 'domínio';
+
+  const notaGeralNum = normalizarNota(execucaoSelecionada?.nota_geral);
+  const nivelMaturidade = obterNivelMaturidade(notaGeralNum);
+  const alertaRegulatorio = resultadosOrdenados.some((r) => normalizarNota(r.nota) === 0);
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Diagnóstico LGPD
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Gerencie modelos, perguntas e execuções com notas por domínio.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Button icon={<ReloadOutlined />} onClick={() => {
           carregarModelos(true);
           if (modeloSelecionadoId) carregarPerguntasModelo(modeloSelecionadoId, true);
@@ -1008,7 +1355,7 @@ function DiagnosticoLgpd() {
                     <Tag color="geekblue">
                       {empresaSelecionada
                         ? empresas.find((e) => e.id === empresaSelecionada)?.nome || 'Empresa'
-                        : 'Todas'}
+                        : 'Selecione uma empresa'}
                     </Tag>
                   </Space>
                   <Button type="primary" icon={<PlusOutlined />} onClick={abrirNovaExecucao}>
@@ -1046,6 +1393,19 @@ function DiagnosticoLgpd() {
           <Form.Item label="Nome" name="nome" rules={[{ required: true, message: 'Informe o nome' }]}>
             <Input />
           </Form.Item>
+          <Form.Item
+            label="Escopo"
+            name="dm_escopo_id"
+            rules={[{ required: true, message: 'Selecione o escopo' }]}
+          >
+            <Select
+              placeholder="Selecione"
+              options={escopos.map((e) => ({ value: e.id, label: e.nome }))}
+            />
+          </Form.Item>
+          <Form.Item label="Descrição" name="descricao">
+            <Input.TextArea rows={3} />
+          </Form.Item>
           <Form.Item label="Versão" name="versao">
             <Input type="number" min={1} step={1} />
           </Form.Item>
@@ -1077,6 +1437,19 @@ function DiagnosticoLgpd() {
             <AutoComplete
               placeholder="Informe ou selecione"
               options={dominiosDisponiveis.map((d) => ({ value: d }))}
+              filterOption={(inputValue, option) =>
+                (option?.value ?? '').toLowerCase().includes(inputValue.toLowerCase())
+              }
+            />
+          </Form.Item>
+          <Form.Item
+            label="Macro domínio"
+            name="macro_dominio"
+            rules={[{ required: true, message: 'Informe o macro domínio' }]}
+          >
+            <AutoComplete
+              placeholder="Informe ou selecione"
+              options={macroDominiosPadrao.map((d) => ({ value: d }))}
               filterOption={(inputValue, option) =>
                 (option?.value ?? '').toLowerCase().includes(inputValue.toLowerCase())
               }
@@ -1309,7 +1682,7 @@ function DiagnosticoLgpd() {
         {execucaoSelecionada && (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <Flex align="center" justify="space-between">
-              <Typography.Text strong>Resumo</Typography.Text>
+              <Typography.Text strong>Resumo do diagnóstico</Typography.Text>
               <Space>
                 {!analiseAtual && (
                   <Button
@@ -1319,6 +1692,12 @@ function DiagnosticoLgpd() {
                     Gerar análise
                   </Button>
                 )}
+                <Button
+                  onClick={() => abrirModalAcoes(execucaoSelecionada)}
+                  disabled={!acoesSugeridasAtual.length}
+                >
+                  Cadastrar ações
+                </Button>
                 <Button
                   icon={<FilePdfOutlined />}
                   onClick={() => exportarPdf(execucaoSelecionada)}
@@ -1331,38 +1710,92 @@ function DiagnosticoLgpd() {
             </Flex>
 
             <Card size="small">
-              <Space direction="vertical" size={4}>
-                <Typography.Text type="secondary">Nota geral</Typography.Text>
-                <Typography.Title level={3} style={{ margin: 0 }}>
-                  {formatNota(execucaoSelecionada.nota_geral)}
-                </Typography.Title>
-              </Space>
+              <Flex align="center" justify="space-between">
+                <Space direction="vertical" size={4}>
+                  <Typography.Text type="secondary">Total de conformidade</Typography.Text>
+                  <Typography.Title level={3} style={{ margin: 0 }}>
+                    {Math.round(notaGeralNum)}%
+                  </Typography.Title>
+                </Space>
+                <Space direction="vertical" size={4} align="end">
+                  <Tag color="blue">{nivelMaturidade}</Tag>
+                  <Progress
+                    percent={Math.round(notaGeralNum)}
+                    showInfo={false}
+                    strokeColor="#0b5be1"
+                    style={{ width: 160 }}
+                  />
+                </Space>
+              </Flex>
             </Card>
 
-            <Table
-              rowKey="dominio"
-              dataSource={resultados}
-              loading={carregandoResultados}
-              pagination={false}
-              columns={[
-                { title: 'Domínio', dataIndex: 'dominio' },
-                {
-                  title: 'Nota',
-                  dataIndex: 'nota',
-                  render: (value: number | string) => (
-                    <Tag color="geekblue">{formatNota(value)}</Tag>
-                  )
-                },
-                {
-                  title: 'Pontuação',
-                  render: (_: unknown, record: DiagnosticoResultadoDominio) => (
-                    <Typography.Text type="secondary">
-                      {formatNota(record.pontos ?? 0)} / {record.max_pontos ?? 0}
-                    </Typography.Text>
-                  )
-                }
-              ]}
-            />
+            {resultadosOrdenados.length === 0 ? (
+              <Empty description={`Sem resultados por ${labelDominio}`} />
+            ) : (
+              <Row gutter={[16, 16]}>
+                <Col xs={24} lg={12}>
+                  <Card size="small" title="Mapa de maturidade">
+                    <div style={{ width: '100%', height: 260 }}>
+                      <ResponsiveContainer>
+                        <RadarChart data={resultadosOrdenados.map((r) => ({
+                          dominio: r.dominio,
+                          nota: normalizarNota(r.nota)
+                        }))}>
+                          <PolarGrid />
+                          <PolarAngleAxis dataKey="dominio" />
+                          <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={6} />
+                          <Radar
+                            name="Maturidade"
+                            dataKey="nota"
+                            stroke="#0b5be1"
+                            fill="#0b5be1"
+                            fillOpacity={0.35}
+                          />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                </Col>
+                <Col xs={24} lg={12}>
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Card size="small" title="Alertas">
+                      <Space>
+                        <SafetyCertificateOutlined
+                          style={{ color: alertaRegulatorio ? '#d93025' : '#27ae60' }}
+                        />
+                        <Typography.Text strong>
+                          {alertaRegulatorio
+                            ? 'Alto Risco Regulatório'
+                            : 'Sem alertas críticos'}
+                        </Typography.Text>
+                      </Space>
+                    </Card>
+
+                    <Card size="small" title={`Pontuação por ${labelDominio}`}>
+                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                        {resultadosOrdenados.map((item, index) => {
+                          const nota = normalizarNota(item.nota);
+                          const cor = coresDominio[index % coresDominio.length];
+                          return (
+                            <div key={item.dominio} style={{ width: '100%' }}>
+                              <Flex align="center" justify="space-between">
+                                <Typography.Text>{item.dominio}</Typography.Text>
+                                <Tag color="geekblue">{formatNota(nota)}</Tag>
+                              </Flex>
+                              <Progress
+                                percent={Math.round(nota)}
+                                showInfo={false}
+                                strokeColor={cor}
+                              />
+                            </div>
+                          );
+                        })}
+                      </Space>
+                    </Card>
+                  </Space>
+                </Col>
+              </Row>
+            )}
 
             <Card size="small" title="Diagnóstico textual">
               {carregandoAnalise && !analiseAtual ? (
@@ -1377,8 +1810,55 @@ function DiagnosticoLgpd() {
                 </Typography.Text>
               )}
             </Card>
+
+            <Card size="small" title="Ações sugeridas">
+              {acoesSugeridasAtual.length ? (
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  {acoesSugeridasAtual.map((acao, idx) => (
+                    <div key={`${acao.acao}-${idx}`} style={{ width: '100%' }}>
+                      <Typography.Text strong>{acao.acao}</Typography.Text>
+                      {acao.objetivo && (
+                        <Typography.Text type="secondary"> — {acao.objetivo}</Typography.Text>
+                      )}
+                      <div style={{ marginTop: 6 }}>
+                        {acao.macro_dominio && <Tag color="geekblue">{acao.macro_dominio}</Tag>}
+                        <Tag>Prioridade {acao.prioridade ?? 3}</Tag>
+                        <Tag>Esforço {acao.esforco ?? 3}</Tag>
+                      </div>
+                    </div>
+                  ))}
+                </Space>
+              ) : (
+                <Typography.Text type="secondary">
+                  Nenhuma ação sugerida disponível.
+                </Typography.Text>
+              )}
+            </Card>
           </Space>
         )}
+      </Modal>
+
+      <Modal
+        title="Cadastrar ações sugeridas"
+        open={modalAcoesAberto}
+        onCancel={() => setModalAcoesAberto(false)}
+        okText="Cadastrar selecionadas"
+        cancelText="Cancelar"
+        onOk={cadastrarAcoesSelecionadas}
+        confirmLoading={salvandoAcoes}
+        width={880}
+        destroyOnClose
+      >
+        <Table
+          rowKey="id"
+          dataSource={acoesSugeridasTabela}
+          columns={colunasAcoesSugeridas}
+          pagination={false}
+          rowSelection={{
+            selectedRowKeys: acoesSelecionadas,
+            onChange: (keys) => setAcoesSelecionadas(keys as number[])
+          }}
+        />
       </Modal>
     </Space>
   );

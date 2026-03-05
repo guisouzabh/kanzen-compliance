@@ -104,7 +104,7 @@ export async function criarDocumentoEmpresaService(
         usuario_responsavel_id,
         responsavel_tecnico,
         observacoes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       dados.empresa_id,
@@ -168,8 +168,8 @@ export async function atualizarDocumentoEmpresaService(
     `,
     [
       dados.empresa_id,
-      dados.impacto ?? impactoPadrao ?? null,
       dados.documento_regulatorio_id,
+      dados.impacto ?? impactoPadrao ?? null,
       dados.status ?? 'PENDENTE',
       dados.data_emissao ?? null,
       dados.data_validade ?? null,
@@ -263,6 +263,47 @@ export async function deletarDocumentoArquivoService(
     tenantId,
     'DELETE FROM documentos_arquivos WHERE tenant_id = ? AND documento_empresa_id = ? AND id = ?',
     [documentoEmpresaId, arquivoId]
+  );
+
+  const { affectedRows } = result as any;
+  return !!affectedRows;
+}
+
+export async function obterDocumentoArquivoPorIdService(
+  documentoEmpresaId: number,
+  arquivoId: number,
+  tenantId: number
+): Promise<DocumentoArquivo | null> {
+  await validarDocumentoEmpresa(tenantId, documentoEmpresaId);
+
+  const rows = await tenantQuery<DocumentoArquivo>(
+    tenantId,
+    `
+      SELECT *
+        FROM documentos_arquivos
+       WHERE tenant_id = ? AND documento_empresa_id = ? AND id = ?
+       LIMIT 1
+    `,
+    [documentoEmpresaId, arquivoId]
+  );
+
+  return rows[0] ?? null;
+}
+
+export async function atualizarHashDocumentoArquivoService(
+  documentoEmpresaId: number,
+  arquivoId: number,
+  hashArquivo: string | null,
+  tenantId: number
+): Promise<boolean> {
+  const result = await tenantExecute(
+    tenantId,
+    `
+      UPDATE documentos_arquivos
+         SET tenant_id = ?, hash_arquivo = ?
+       WHERE tenant_id = ? AND documento_empresa_id = ? AND id = ?
+    `,
+    [hashArquivo, tenantId, documentoEmpresaId, arquivoId]
   );
 
   const { affectedRows } = result as any;

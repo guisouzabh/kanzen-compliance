@@ -14,13 +14,6 @@ function LgpdMapa() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Typography.Title level={3} style={{ margin: 0 }}>
-        Jornada LGPD
-      </Typography.Title>
-      <Typography.Text type="secondary">
-        Visualize as fases e áreas da adequação e acesse rapidamente o Inventário de Dados Pessoais.
-      </Typography.Text>
-
       <Card
         bodyStyle={{ padding: 0 }}
         style={{

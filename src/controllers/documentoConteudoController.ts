@@ -6,7 +6,8 @@ import {
   criarDocumentoConteudoService,
   obterDocumentoConteudoPorIdService,
   atualizarDocumentoConteudoService,
-  deletarDocumentoConteudoService
+  deletarDocumentoConteudoService,
+  exportarDocumentoConteudoDocxService
 } from '../services/documentoConteudoService';
 import {
   documentoConteudoSchema,
@@ -103,4 +104,22 @@ export async function deletarDocumentoConteudo(req: AuthRequest, res: Response) 
   }
 
   return res.status(204).send();
+}
+
+export async function exportarDocumentoConteudoDocx(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    throw new AppError('ID inválido', 400);
+  }
+
+  const { buffer, fileName } = await exportarDocumentoConteudoDocxService(id, tenantId);
+
+  res.setHeader(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  );
+  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+  return res.send(buffer);
 }

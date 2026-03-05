@@ -15,7 +15,7 @@ interface EmpresaContextValue {
     parametro_maturidade?: number;
     termometro_sancoes_id?: number;
   }[];
-  empresaSelecionada: number | null; // null representa "TODAS"
+  empresaSelecionada: number | null; // null quando não há empresa disponível
   setEmpresaSelecionada: (id: number | null) => void;
   carregando: boolean;
 }
@@ -46,7 +46,13 @@ export function EmpresaProvider({ children }: { children: React.ReactNode }) {
         if (!token) return;
         setCarregando(true);
         const resp = await api.get('/empresas');
-        setEmpresas(resp.data || []);
+        const lista = resp.data || [];
+        setEmpresas(lista);
+        setEmpresaSelecionada((atual) => {
+          if (!lista.length) return null;
+          if (atual && lista.some((empresa) => empresa.id === atual)) return atual;
+          return lista[0].id;
+        });
       } finally {
         setCarregando(false);
       }

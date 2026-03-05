@@ -235,15 +235,7 @@ function EmpresaDadosStatus() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Status LGPD
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Acompanhe o andamento de fiscalização por empresa e área de status.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => carregarDados(true)} />
           <Button type="primary" icon={<PlusOutlined />} onClick={prepararNovo}>

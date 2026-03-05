@@ -39,15 +39,14 @@ CREATE TABLE requisito_checkins (
     ON DELETE CASCADE
 );
 
-CREATE TABLE requisito_tags (
+CREATE TABLE tenant_tags (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tenant_id INT NOT NULL,
-  requisito_id INT NOT NULL,
+  entity_type VARCHAR(50) NOT NULL,
+  entity_id INT NOT NULL,
   tag VARCHAR(100) NOT NULL,
   INDEX idx_tags_tenant (tenant_id),
-  CONSTRAINT fk_tag_requisito
-    FOREIGN KEY (requisito_id) REFERENCES requisitos(id)
-    ON DELETE CASCADE
+  INDEX idx_tags_entity (entity_type, entity_id)
 );
 
 CREATE TABLE requisito_outras_areas (

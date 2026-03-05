@@ -15,23 +15,34 @@ import {
   salvarDiagnosticoRespostasService,
   finalizarDiagnosticoExecucaoService,
   listarDiagnosticoResultadosDominioService,
+  listarDiagnosticoResultadosMacroService,
   listarDiagnosticoRespostasService,
-  gerarDiagnosticoTextoService
+  gerarDiagnosticoTextoService,
+  listarDmEscopoService,
+  criarDiagnosticoAcoesService
 } from '../services/diagnosticoLgpdService';
 import {
   diagnosticoModeloSchema,
   diagnosticoPerguntaSchema,
   diagnosticoExecucaoSchema,
   diagnosticoRespostasSchema,
+  diagnosticoAcoesSchema,
   DiagnosticoModeloInput,
   DiagnosticoPerguntaInput,
   DiagnosticoExecucaoInput,
-  DiagnosticoRespostasInput
+  DiagnosticoRespostasInput,
+  DiagnosticoAcoesInput
 } from '../validation/diagnosticoLgpdSchema';
 
 export async function listarDiagnosticoModelos(req: AuthRequest, res: Response) {
   const tenantId = req.usuario!.tenantId;
   const dados = await listarDiagnosticoModelosService(tenantId);
+  return res.json(dados);
+}
+
+export async function listarDmEscopos(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const dados = await listarDmEscopoService(tenantId);
   return res.json(dados);
 }
 
@@ -180,10 +191,32 @@ export async function listarDiagnosticoResultadosDominio(req: AuthRequest, res: 
   return res.json(dados);
 }
 
+export async function listarDiagnosticoResultadosMacro(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) throw new AppError('ID inválido', 400);
+  const dados = await listarDiagnosticoResultadosMacroService(id, tenantId);
+  return res.json(dados);
+}
+
 export async function gerarDiagnosticoTexto(req: AuthRequest, res: Response) {
   const tenantId = req.usuario!.tenantId;
   const id = Number(req.params.id);
   if (Number.isNaN(id)) throw new AppError('ID inválido', 400);
   const resultado = await gerarDiagnosticoTextoService(id, tenantId);
+  return res.json(resultado);
+}
+
+export async function criarDiagnosticoAcoes(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) throw new AppError('ID inválido', 400);
+
+  const parseResult = diagnosticoAcoesSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({ erro: 'Dados inválidos', detalhes: parseResult.error.issues });
+  }
+  const dados: DiagnosticoAcoesInput = parseResult.data;
+  const resultado = await criarDiagnosticoAcoesService(id, tenantId, dados.acoes);
   return res.json(resultado);
 }

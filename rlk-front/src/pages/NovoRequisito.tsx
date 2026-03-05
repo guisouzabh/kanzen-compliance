@@ -134,15 +134,7 @@ function NovoRequisito() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Novo Requisito
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Cadastre requisitos internos ou externos. O tenant é aplicado automaticamente.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Space>
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/requisitos')}>
             Voltar

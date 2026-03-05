@@ -25,6 +25,9 @@ export async function listarMatrizAcoes(req: AuthRequest, res: Response) {
     origemId: toNumber(req.query.origem_id),
     status: req.query.status ? String(req.query.status) : undefined,
     statusPrazo: req.query.status_prazo ? String(req.query.status_prazo) : undefined,
+    prioridade: toNumber(req.query.prioridade),
+    responsavelId: toNumber(req.query.responsavel_id),
+    prazoFaixa: req.query.prazo_faixa ? String(req.query.prazo_faixa) : undefined,
     q: req.query.q ? String(req.query.q) : undefined
   };
 

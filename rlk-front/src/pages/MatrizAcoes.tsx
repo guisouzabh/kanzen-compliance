@@ -23,11 +23,14 @@ import {
   ReloadOutlined,
   SaveOutlined,
   EditOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  AppstoreOutlined,
+  TableOutlined
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import api from '../services/api';
 import { useEmpresaContext } from '../contexts/EmpresaContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface MatrizAcao {
   id: number;
@@ -46,6 +49,7 @@ interface MatrizAcao {
   origem_id?: number | null;
   responsavel_id?: number | null;
   responsavel_nome?: string | null;
+  tags?: string[];
   created_at?: string;
 }
 
@@ -69,6 +73,7 @@ type MatrizFormValues = {
   origem_typ?: string | null;
   origem_id?: number | null;
   responsavel_id?: number | null;
+  tags?: string[];
 };
 
 const opcoesStatus = [
@@ -94,32 +99,126 @@ const opcoesNiveis = [
 
 const mapaStatus = new Map(opcoesStatus.map((item) => [item.value, item]));
 const mapaStatusPrazo = new Map(opcoesStatusPrazo.map((item) => [item.value, item]));
+const SEM_FILTRO = '__SEM_FILTRO__';
 
 function MatrizAcoes() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const { empresas, empresaSelecionada } = useEmpresaContext();
   const [lista, setLista] = useState<MatrizAcao[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [filtroStatusPrazo, setFiltroStatusPrazo] = useState<string | undefined>(
+    () => queryParams.get('status_prazo') || undefined
+  );
+  const [filtroStatus, setFiltroStatus] = useState<string | undefined>(
+    () => queryParams.get('status') || undefined
+  );
+  const [filtroPrioridade, setFiltroPrioridade] = useState<number | undefined>(() => {
+    const value = queryParams.get('prioridade');
+    return value ? Number(value) : undefined;
+  });
+  const [filtroResponsavel, setFiltroResponsavel] = useState<number | undefined>(() => {
+    const value = queryParams.get('responsavel_id');
+    return value ? Number(value) : undefined;
+  });
+  const [filtroPrazoFaixa, setFiltroPrazoFaixa] = useState<string | undefined>(
+    () => queryParams.get('prazo_faixa') || undefined
+  );
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [modalAberta, setModalAberta] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [filtroTags, setFiltroTags] = useState<string[]>(() => queryParams.getAll('tag'));
+  const [tagInputValue, setTagInputValue] = useState('');
   const [form] = Form.useForm<MatrizFormValues>();
   const estaEditando = editandoId !== null;
 
-  const listaFiltrada = useMemo(() => {
-    if (!empresaSelecionada) return lista;
-    return lista.filter((item) => item.empresa_id === empresaSelecionada);
+  const listaPorEmpresa = useMemo(() => {
+    if (!empresaSelecionada) return [];
+    return lista;
   }, [lista, empresaSelecionada]);
+
+  const listaFiltrada = useMemo(() => {
+    if (!filtroTags.length) return listaPorEmpresa;
+    return listaPorEmpresa.filter((item) =>
+      filtroTags.every((tag) => (item.tags || []).includes(tag))
+    );
+  }, [listaPorEmpresa, filtroTags]);
+
+  const tagsDisponiveis = useMemo(() => {
+    const set = new Set<string>();
+    listaPorEmpresa.forEach((item) => (item.tags || []).forEach((tag) => set.add(tag)));
+    return Array.from(set);
+  }, [listaPorEmpresa]);
+
+  useEffect(() => {
+    if (!filtroTags.length) return;
+    setFiltroTags((prev) => prev.filter((tag) => tagsDisponiveis.includes(tag)));
+  }, [tagsDisponiveis]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filtroStatusPrazo) params.set('status_prazo', filtroStatusPrazo);
+    if (filtroStatus) params.set('status', filtroStatus);
+    if (typeof filtroPrioridade === 'number') params.set('prioridade', String(filtroPrioridade));
+    if (typeof filtroResponsavel === 'number') params.set('responsavel_id', String(filtroResponsavel));
+    if (filtroPrazoFaixa) params.set('prazo_faixa', filtroPrazoFaixa);
+    filtroTags.forEach((tag) => params.append('tag', tag));
+
+    const nextSearch = params.toString();
+    const currentSearch = location.search.startsWith('?') ? location.search.slice(1) : location.search;
+    if (nextSearch !== currentSearch) {
+      navigate(
+        {
+          pathname: location.pathname,
+          search: nextSearch ? `?${nextSearch}` : ''
+        },
+        { replace: true }
+      );
+    }
+  }, [
+    filtroStatusPrazo,
+    filtroStatus,
+    filtroPrioridade,
+    filtroResponsavel,
+    filtroPrazoFaixa,
+    filtroTags,
+    navigate,
+    location.pathname,
+    location.search
+  ]);
 
   async function carregarDados(showMessage = false) {
     try {
       setCarregando(true);
-      const [acoesResp, usuariosResp] = await Promise.all([
-        api.get('/matriz-acoes'),
+      const params: Record<string, string | number> = {};
+      if (empresaSelecionada) params.empresa_id = empresaSelecionada;
+      if (filtroStatusPrazo) params.status_prazo = filtroStatusPrazo;
+      if (filtroStatus) params.status = filtroStatus;
+      if (typeof filtroPrioridade === 'number') params.prioridade = filtroPrioridade;
+      if (typeof filtroResponsavel === 'number') params.responsavel_id = filtroResponsavel;
+      if (filtroPrazoFaixa) params.prazo_faixa = filtroPrazoFaixa;
+
+      const [acoesResp, usuariosResp] = await Promise.allSettled([
+        api.get('/matriz-acoes', { params }),
         api.get('/usuarios')
       ]);
-      setLista(acoesResp.data || []);
-      setUsuarios(usuariosResp.data || []);
+
+      if (acoesResp.status === 'fulfilled') {
+        setLista(acoesResp.value.data || []);
+      } else {
+        setLista([]);
+      }
+
+      if (usuariosResp.status === 'fulfilled') {
+        setUsuarios(usuariosResp.value.data || []);
+      } else {
+        setUsuarios([]);
+        message.error(
+          usuariosResp.reason?.response?.data?.erro || 'Erro ao carregar usuários'
+        );
+      }
       if (showMessage) message.success('Ações atualizadas');
     } catch (err: any) {
       message.error(err?.response?.data?.erro || 'Erro ao carregar ações');
@@ -130,9 +229,10 @@ function MatrizAcoes() {
 
   useEffect(() => {
     carregarDados();
-  }, []);
+  }, [empresaSelecionada, filtroStatusPrazo, filtroStatus, filtroPrioridade, filtroResponsavel, filtroPrazoFaixa]);
 
   function iniciarEdicao(item: MatrizAcao) {
+    setTagInputValue('');
     form.setFieldsValue({
       empresa_id: item.empresa_id,
       acao: item.acao,
@@ -145,7 +245,8 @@ function MatrizAcoes() {
       origem: item.origem ?? undefined,
       origem_typ: item.origem_typ ?? undefined,
       origem_id: item.origem_id ?? null,
-      responsavel_id: item.responsavel_id ?? null
+      responsavel_id: item.responsavel_id ?? null,
+      tags: item.tags ?? []
     });
     setEditandoId(item.id);
     setModalAberta(true);
@@ -153,12 +254,14 @@ function MatrizAcoes() {
 
   function prepararNovo() {
     setEditandoId(null);
+    setTagInputValue('');
     form.resetFields();
     form.setFieldsValue({
       empresa_id: empresaSelecionada ?? undefined,
       status: 'PLANEJADA',
       prioridade: 3,
-      esforco: 3
+      esforco: 3,
+      tags: []
     });
     setModalAberta(true);
   }
@@ -166,8 +269,10 @@ function MatrizAcoes() {
   function resetarFormulario() {
     setEditandoId(null);
     form.resetFields();
+    setTagInputValue('');
     setModalAberta(false);
   }
+
 
   async function handleSubmit(values: MatrizFormValues) {
     setSalvando(true);
@@ -183,7 +288,8 @@ function MatrizAcoes() {
         origem: values.origem?.trim() || null,
         origem_typ: values.origem_typ?.trim() || null,
         origem_id: values.origem_id ?? null,
-        responsavel_id: values.responsavel_id ?? null
+        responsavel_id: values.responsavel_id ?? null,
+        tags: values.tags || []
       };
 
       if (estaEditando) {
@@ -220,6 +326,7 @@ function MatrizAcoes() {
     }
   }
 
+
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Flex align="center" justify="space-between">
@@ -233,6 +340,20 @@ function MatrizAcoes() {
         </div>
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => carregarDados(true)} />
+          <Button
+            icon={<AppstoreOutlined />}
+            onClick={() =>
+              navigate({
+                pathname: '/matriz-acoes-kanban',
+                search: location.search
+              })
+            }
+          >
+            Ver kanban
+          </Button>
+          <Button type="primary" icon={<TableOutlined />} disabled>
+            Lista
+          </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={prepararNovo} disabled={!empresas.length}>
             Nova ação
           </Button>
@@ -245,6 +366,99 @@ function MatrizAcoes() {
         </Card>
       ) : (
         <Card title="Ações registradas">
+          <Space wrap style={{ marginBottom: 16 }}>
+            <Typography.Text type="secondary">Status do prazo:</Typography.Text>
+            <Select
+              allowClear
+              placeholder="Todos"
+              value={filtroStatusPrazo}
+              onChange={(value) => setFiltroStatusPrazo(value === SEM_FILTRO ? undefined : value)}
+              style={{ minWidth: 170 }}
+              options={[
+                { value: SEM_FILTRO, label: ' ' },
+                ...opcoesStatusPrazo.map((item) => ({ value: item.value, label: item.label }))
+              ]}
+            />
+            <Typography.Text type="secondary">Status:</Typography.Text>
+            <Select
+              allowClear
+              placeholder="Todos"
+              value={filtroStatus}
+              onChange={(value) => setFiltroStatus(value === SEM_FILTRO ? undefined : value)}
+              style={{ minWidth: 160 }}
+              options={[
+                { value: SEM_FILTRO, label: ' ' },
+                ...opcoesStatus.map((item) => ({ value: item.value, label: item.label }))
+              ]}
+            />
+            <Typography.Text type="secondary">Prioridade:</Typography.Text>
+            <Select
+              allowClear
+              placeholder="Todas"
+              value={filtroPrioridade}
+              onChange={(value) =>
+                setFiltroPrioridade(value === SEM_FILTRO ? undefined : value)
+              }
+              style={{ minWidth: 170 }}
+              options={[{ value: SEM_FILTRO, label: ' ' }, ...opcoesNiveis]}
+            />
+            <Typography.Text type="secondary">Responsável:</Typography.Text>
+            <Select
+              allowClear
+              placeholder="Todos"
+              value={filtroResponsavel}
+              onChange={(value) =>
+                setFiltroResponsavel(value === SEM_FILTRO ? undefined : value)
+              }
+              style={{ minWidth: 260 }}
+              options={[
+                { value: SEM_FILTRO, label: ' ' },
+                ...usuarios.map((u) => ({
+                  value: u.id,
+                  label: u.email ? `${u.nome} (${u.email})` : u.nome
+                }))
+              ]}
+            />
+            <Typography.Text type="secondary">Prazo:</Typography.Text>
+            <Select
+              allowClear
+              placeholder="Todos"
+              value={filtroPrazoFaixa}
+              onChange={(value) => setFiltroPrazoFaixa(value === SEM_FILTRO ? undefined : value)}
+              style={{ minWidth: 220 }}
+              options={[
+                { value: SEM_FILTRO, label: ' ' },
+                { value: 'HOJE', label: 'Hoje' },
+                { value: 'PROXIMOS_7_DIAS', label: 'Próximos 7 dias' },
+                { value: 'PROXIMOS_30_DIAS', label: 'Próximos 30 dias' },
+                { value: 'PROXIMOS_90_DIAS', label: 'Próximos 90 dias' },
+                { value: 'PROXIMOS_6_MESES', label: 'Próximos 6 meses' },
+                { value: 'MAIOR_QUE_6_MESES', label: 'Maior que 6 meses' }
+              ]}
+            />
+            <Typography.Text type="secondary">Filtrar por tags:</Typography.Text>
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="Selecione uma ou mais tags"
+              value={filtroTags}
+              onChange={(value) => setFiltroTags(value)}
+              style={{ minWidth: 320 }}
+              options={tagsDisponiveis.map((tag) => ({ value: tag, label: tag }))}
+            />
+            <Button
+              onClick={() => {
+                setFiltroStatusPrazo(undefined);
+                setFiltroStatus(undefined);
+                setFiltroPrioridade(undefined);
+                setFiltroResponsavel(undefined);
+                setFiltroPrazoFaixa(undefined);
+                setFiltroTags([]);
+              }}
+            >
+              Limpar filtros
+            </Button>
+          </Space>
           {listaFiltrada.length === 0 && !carregando ? (
             <Empty description="Nenhuma ação registrada" />
           ) : (
@@ -257,32 +471,34 @@ function MatrizAcoes() {
                 {
                   title: 'Ação',
                   dataIndex: 'acao',
+                  width: 360,
+                  sorter: (a: MatrizAcao, b: MatrizAcao) =>
+                    (a.acao || '').localeCompare(b.acao || ''),
                   render: (_: string, record: MatrizAcao) => (
-                    <Space direction="vertical" size={0}>
+                    <Space direction="vertical" size={0} style={{ width: '100%' }}>
                       <Typography.Text>{record.acao}</Typography.Text>
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                         {record.objetivo || 'Sem objetivo informado'}
                       </Typography.Text>
-                    </Space>
-                  )
-                },
-                {
-                  title: 'Empresa',
-                  dataIndex: 'empresa_nome',
-                  render: (_: unknown, record: MatrizAcao) => (
-                    <Space>
-                      <Tag color="blue">
-                        {record.empresa_nome ||
-                          empresas.find((e) => e.id === record.empresa_id)?.nome ||
-                          'Empresa'}
-                      </Tag>
-                      <Typography.Text type="secondary">#{record.empresa_id}</Typography.Text>
+                      {record.tags && record.tags.length ? (
+                        <Space wrap size={[4, 4]}>
+                          {record.tags.map((tag) => (
+                            <Tag key={tag}>{tag}</Tag>
+                          ))}
+                        </Space>
+                      ) : (
+                        <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                          Sem tags
+                        </Typography.Text>
+                      )}
                     </Space>
                   )
                 },
                 {
                   title: 'Status',
                   dataIndex: 'status',
+                  sorter: (a: MatrizAcao, b: MatrizAcao) =>
+                    (a.status || '').localeCompare(b.status || ''),
                   render: (value?: MatrizAcao['status']) => {
                     const info = value ? mapaStatus.get(value) : undefined;
                     return <Tag color={info?.color || 'default'}>{info?.label || value || '-'}</Tag>;
@@ -291,22 +507,33 @@ function MatrizAcoes() {
                 {
                   title: 'Prioridade',
                   dataIndex: 'prioridade',
+                  sorter: (a: MatrizAcao, b: MatrizAcao) =>
+                    (a.prioridade ?? 0) - (b.prioridade ?? 0),
                   render: (value?: number) => <Tag>{value ?? '-'}</Tag>
                 },
                 {
                   title: 'Esforço',
                   dataIndex: 'esforco',
+                  sorter: (a: MatrizAcao, b: MatrizAcao) =>
+                    (a.esforco ?? 0) - (b.esforco ?? 0),
                   render: (value?: number) => <Tag>{value ?? '-'}</Tag>
                 },
                 {
                   title: 'Prazo',
                   dataIndex: 'prazo',
+                  sorter: (a: MatrizAcao, b: MatrizAcao) => {
+                    const da = a.prazo ? dayjs(a.prazo).valueOf() : 0;
+                    const db = b.prazo ? dayjs(b.prazo).valueOf() : 0;
+                    return da - db;
+                  },
                   render: (value?: string | null) =>
                     value ? <Tag>{dayjs(value).format('DD/MM/YYYY')}</Tag> : '-'
                 },
                 {
                   title: 'Status do prazo',
                   dataIndex: 'status_prazo',
+                  sorter: (a: MatrizAcao, b: MatrizAcao) =>
+                    (a.status_prazo || '').localeCompare(b.status_prazo || ''),
                   render: (value?: MatrizAcao['status_prazo']) => {
                     const info = value ? mapaStatusPrazo.get(value) : undefined;
                     return <Tag color={info?.color || 'default'}>{info?.label || value || '-'}</Tag>;
@@ -315,6 +542,8 @@ function MatrizAcoes() {
                 {
                   title: 'Responsável',
                   dataIndex: 'responsavel_nome',
+                  sorter: (a: MatrizAcao, b: MatrizAcao) =>
+                    (a.responsavel_nome || '').localeCompare(b.responsavel_nome || ''),
                   render: (_: unknown, record: MatrizAcao) =>
                     record.responsavel_nome ? (
                       <Tag color="purple">{record.responsavel_nome}</Tag>
@@ -385,6 +614,25 @@ function MatrizAcoes() {
           <Form.Item label="Objetivo" name="objetivo">
             <Input.TextArea rows={3} placeholder="Por que essa ação é necessária?" maxLength={2000} />
           </Form.Item>
+          <Form.Item label="Tags" name="tags">
+            <Select
+              mode="tags"
+              placeholder="Adicione tags"
+              options={tagsDisponiveis.map((tag) => ({ value: tag, label: tag }))}
+              tokenSeparators={[',', ';']}
+              searchValue={tagInputValue}
+              onSearch={(value) => setTagInputValue(value)}
+              onBlur={() => {
+                const novaTag = tagInputValue.trim();
+                if (!novaTag) return;
+                const atuais = form.getFieldValue('tags') || [];
+                if (!atuais.includes(novaTag)) {
+                  form.setFieldValue('tags', [...atuais, novaTag]);
+                }
+                setTagInputValue('');
+              }}
+            />
+          </Form.Item>
 
           <Divider orientation="left">Planejamento</Divider>
           <Form.Item label="Status" name="status">
@@ -447,6 +695,7 @@ function MatrizAcoes() {
           </Form.Item>
         </Form>
       </Modal>
+
     </Space>
   );
 }

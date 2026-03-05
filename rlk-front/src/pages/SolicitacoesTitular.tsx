@@ -275,15 +275,7 @@ function SolicitacoesTitular() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Direitos do Titular
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Registre e acompanhe solicitações dos titulares de dados vinculadas às empresas.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => carregarDados(true)} />
           <Button

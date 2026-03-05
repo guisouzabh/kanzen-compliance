@@ -137,15 +137,7 @@ function CategoriasDados() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Flex align="center" justify="space-between">
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Categorias de Dados Pessoais
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Mantenha a taxonomia usada no Inventário de Dados Pessoais.
-          </Typography.Text>
-        </div>
+      <Flex align="center" justify="flex-end">
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => carregarDados(true)} />
           <Button

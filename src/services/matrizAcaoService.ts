@@ -1,6 +1,9 @@
 import { tenantExecute, tenantQuery } from '../db/tenantDb';
 import { AppError } from '../errors/AppError';
 import { MatrizAcao } from '../types/MatrizAcao';
+import { buscarTagsMap, deletarTags, salvarTags } from './tagService';
+
+const TAG_ENTITY_MATRIZ_ACAO = 'MATRIZ_ACAO';
 
 interface MatrizAcaoFilters {
   empresaId?: number;
@@ -8,6 +11,9 @@ interface MatrizAcaoFilters {
   origemId?: number;
   status?: string;
   statusPrazo?: string;
+  prioridade?: number;
+  responsavelId?: number;
+  prazoFaixa?: string;
   q?: string;
 }
 
@@ -56,6 +62,34 @@ export async function listarMatrizAcoesService(
     conditions.push('a.status_prazo = ?');
     params.push(filters.statusPrazo);
   }
+  if (filters.prioridade) {
+    conditions.push('a.prioridade = ?');
+    params.push(filters.prioridade);
+  }
+  if (filters.responsavelId) {
+    conditions.push('a.responsavel_id = ?');
+    params.push(filters.responsavelId);
+  }
+  if (filters.prazoFaixa) {
+    if (filters.prazoFaixa === 'HOJE') {
+      conditions.push('a.prazo = CURRENT_DATE()');
+    }
+    if (filters.prazoFaixa === 'PROXIMOS_7_DIAS') {
+      conditions.push('a.prazo IS NOT NULL AND a.prazo BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY)');
+    }
+    if (filters.prazoFaixa === 'PROXIMOS_30_DIAS') {
+      conditions.push('a.prazo IS NOT NULL AND a.prazo BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 30 DAY)');
+    }
+    if (filters.prazoFaixa === 'PROXIMOS_90_DIAS') {
+      conditions.push('a.prazo IS NOT NULL AND a.prazo BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 90 DAY)');
+    }
+    if (filters.prazoFaixa === 'PROXIMOS_6_MESES') {
+      conditions.push('a.prazo IS NOT NULL AND a.prazo BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 6 MONTH)');
+    }
+    if (filters.prazoFaixa === 'MAIOR_QUE_6_MESES') {
+      conditions.push('a.prazo IS NOT NULL AND a.prazo > DATE_ADD(CURRENT_DATE(), INTERVAL 6 MONTH)');
+    }
+  }
   if (filters.q) {
     conditions.push('(a.acao LIKE ? OR a.objetivo LIKE ? OR a.origem LIKE ?)');
     params.push(`%${filters.q}%`, `%${filters.q}%`, `%${filters.q}%`);
@@ -70,7 +104,14 @@ export async function listarMatrizAcoesService(
      ORDER BY a.id DESC
   `;
 
-  return tenantQuery<MatrizAcao>(tenantId, sql, params.slice(1));
+  const acoes = await tenantQuery<MatrizAcao>(tenantId, sql, params.slice(1));
+  const ids = acoes.map((acao) => acao.id!).filter(Boolean);
+  const tagsMap = await buscarTagsMap(tenantId, TAG_ENTITY_MATRIZ_ACAO, ids);
+
+  return acoes.map((acao) => ({
+    ...acao,
+    tags: tagsMap[acao.id!] || []
+  }));
 }
 
 export async function obterMatrizAcaoPorIdService(
@@ -89,22 +130,31 @@ export async function obterMatrizAcaoPorIdService(
     [id]
   );
 
-  return rows[0] ?? null;
+  const acao = rows[0];
+  if (!acao) return null;
+
+  const tagsMap = await buscarTagsMap(tenantId, TAG_ENTITY_MATRIZ_ACAO, [id]);
+  return {
+    ...acao,
+    tags: tagsMap[id] || []
+  };
 }
 
 export async function criarMatrizAcaoService(
   dados: MatrizAcao,
   tenantId: number
 ): Promise<MatrizAcao> {
-  await validarEmpresa(tenantId, dados.empresa_id);
-  if (dados.responsavel_id) {
-    await validarResponsavel(tenantId, dados.responsavel_id);
+  const { tags, ...acaoSemTags } = dados;
+
+  await validarEmpresa(tenantId, acaoSemTags.empresa_id);
+  if (acaoSemTags.responsavel_id) {
+    await validarResponsavel(tenantId, acaoSemTags.responsavel_id);
   }
 
-  const status = dados.status ?? 'PLANEJADA';
-  const prioridade = dados.prioridade ?? 3;
-  const esforco = dados.esforco ?? 3;
-  const statusPrazo = dados.status_prazo ?? 'NO_PRAZO';
+  const status = acaoSemTags.status ?? 'PLANEJADA';
+  const prioridade = acaoSemTags.prioridade ?? 3;
+  const esforco = acaoSemTags.esforco ?? 3;
+  const statusPrazo = acaoSemTags.status_prazo ?? 'NO_PRAZO';
 
   const result = await tenantExecute(
     tenantId,
@@ -127,31 +177,33 @@ export async function criarMatrizAcaoService(
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
-      dados.empresa_id,
-      dados.acao,
-      dados.objetivo ?? null,
+      acaoSemTags.empresa_id,
+      acaoSemTags.acao,
+      acaoSemTags.objetivo ?? null,
       status,
       prioridade,
       esforco,
-      dados.prazo ?? null,
+      acaoSemTags.prazo ?? null,
       statusPrazo,
-      dados.origem ?? null,
-      dados.origem_typ ?? null,
-      dados.origem_id ?? null,
-      dados.responsavel_id ?? null
+      acaoSemTags.origem ?? null,
+      acaoSemTags.origem_typ ?? null,
+      acaoSemTags.origem_id ?? null,
+      acaoSemTags.responsavel_id ?? null
     ]
   );
 
   const id = (result as any).insertId;
+  await salvarTags(tenantId, TAG_ENTITY_MATRIZ_ACAO, id, tags);
   const criada = await obterMatrizAcaoPorIdService(id, tenantId);
   return (
     criada ?? {
-      ...dados,
+      ...acaoSemTags,
       id,
       status,
       prioridade,
       esforco,
-      status_prazo: statusPrazo
+      status_prazo: statusPrazo,
+      tags: tags || []
     }
   );
 }
@@ -161,15 +213,17 @@ export async function atualizarMatrizAcaoService(
   dados: MatrizAcao,
   tenantId: number
 ): Promise<MatrizAcao | null> {
-  await validarEmpresa(tenantId, dados.empresa_id);
-  if (dados.responsavel_id) {
-    await validarResponsavel(tenantId, dados.responsavel_id);
+  const { tags, ...acaoSemTags } = dados;
+
+  await validarEmpresa(tenantId, acaoSemTags.empresa_id);
+  if (acaoSemTags.responsavel_id) {
+    await validarResponsavel(tenantId, acaoSemTags.responsavel_id);
   }
 
-  const status = dados.status ?? 'PLANEJADA';
-  const prioridade = dados.prioridade ?? 3;
-  const esforco = dados.esforco ?? 3;
-  const statusPrazo = dados.status_prazo ?? 'NO_PRAZO';
+  const status = acaoSemTags.status ?? 'PLANEJADA';
+  const prioridade = acaoSemTags.prioridade ?? 3;
+  const esforco = acaoSemTags.esforco ?? 3;
+  const statusPrazo = acaoSemTags.status_prazo ?? 'NO_PRAZO';
 
   const result = await tenantExecute(
     tenantId,
@@ -191,18 +245,18 @@ export async function atualizarMatrizAcaoService(
        WHERE tenant_id = ? AND id = ?
     `,
     [
-      dados.empresa_id,
-      dados.acao,
-      dados.objetivo ?? null,
+      acaoSemTags.empresa_id,
+      acaoSemTags.acao,
+      acaoSemTags.objetivo ?? null,
       status,
       prioridade,
       esforco,
-      dados.prazo ?? null,
+      acaoSemTags.prazo ?? null,
       statusPrazo,
-      dados.origem ?? null,
-      dados.origem_typ ?? null,
-      dados.origem_id ?? null,
-      dados.responsavel_id ?? null,
+      acaoSemTags.origem ?? null,
+      acaoSemTags.origem_typ ?? null,
+      acaoSemTags.origem_id ?? null,
+      acaoSemTags.responsavel_id ?? null,
       tenantId,
       id
     ]
@@ -210,6 +264,8 @@ export async function atualizarMatrizAcaoService(
 
   const { affectedRows } = result as any;
   if (!affectedRows) return null;
+
+  await salvarTags(tenantId, TAG_ENTITY_MATRIZ_ACAO, id, tags);
   return obterMatrizAcaoPorIdService(id, tenantId);
 }
 
@@ -217,6 +273,7 @@ export async function deletarMatrizAcaoService(
   id: number,
   tenantId: number
 ): Promise<boolean> {
+  await deletarTags(tenantId, TAG_ENTITY_MATRIZ_ACAO, id);
   const result = await tenantExecute(
     tenantId,
     'DELETE FROM matriz_acoes WHERE tenant_id = ? AND id = ?',

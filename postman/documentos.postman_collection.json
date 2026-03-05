@@ -1,0 +1,805 @@
+{
+  "info": {
+    "name": "Documentos - Backend",
+    "description": "Colecao com todas as rotas de documentos do backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1"
+    },
+    {
+      "key": "token",
+      "value": "COLE_SEU_TOKEN_AQUI"
+    },
+    {
+      "key": "nome",
+      "value": "Usuario Teste"
+    },
+    {
+      "key": "email",
+      "value": "teste@exemplo.com"
+    },
+    {
+      "key": "senha",
+      "value": "Senha@123"
+    },
+    {
+      "key": "tenantId",
+      "value": "1"
+    },
+    {
+      "key": "empresaId",
+      "value": "1"
+    },
+    {
+      "key": "areaId",
+      "value": "1"
+    },
+    {
+      "key": "usuarioId",
+      "value": "1"
+    },
+    {
+      "key": "classificacaoId",
+      "value": "1"
+    },
+    {
+      "key": "documentoRegulatorioId",
+      "value": "1"
+    },
+    {
+      "key": "documentoEmpresaId",
+      "value": "1"
+    },
+    {
+      "key": "arquivoId",
+      "value": "1"
+    },
+    {
+      "key": "documentoConteudoId",
+      "value": "1"
+    },
+    {
+      "key": "modeloSecaoId",
+      "value": "1"
+    },
+    {
+      "key": "conteudoSecaoId",
+      "value": "1"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nome}}\",\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{senha}}\",\n  \"tenant_id\": {{tenantId}},\n  \"empresa_id\": {{empresaId}},\n  \"area_id\": {{areaId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{senha}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documentos Regulatorios",
+      "item": [
+        {
+          "name": "Listar documentos regulatorios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-regulatorios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-regulatorios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar documento regulatorio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classificacao_id\": {{classificacaoId}},\n  \"nome\": \"Politica de Privacidade\",\n  \"sigla\": \"PP\",\n  \"descricao\": \"Documento publico com diretrizes de privacidade.\",\n  \"base_legal\": \"LGPD arts. 6 e 9\",\n  \"orgao_emissor\": \"ANPD\",\n  \"obrigatoriedade\": \"OBRIGATORIO\",\n  \"periodicidade\": \"EVENTUAL\",\n  \"impacto\": 3,\n  \"exige_responsavel_tecnico\": false,\n  \"exige_assinatura\": true,\n  \"exige_validade\": false,\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documentos-regulatorios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-regulatorios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter documento regulatorio",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-regulatorios/{{documentoRegulatorioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-regulatorios",
+                "{{documentoRegulatorioId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar documento regulatorio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classificacao_id\": {{classificacaoId}},\n  \"nome\": \"Politica de Privacidade (Atualizada)\",\n  \"sigla\": \"PP\",\n  \"descricao\": \"Documento atualizado.\",\n  \"base_legal\": \"LGPD arts. 6 e 9\",\n  \"orgao_emissor\": \"ANPD\",\n  \"obrigatoriedade\": \"OBRIGATORIO\",\n  \"periodicidade\": \"ANUAL\",\n  \"impacto\": 4,\n  \"exige_responsavel_tecnico\": false,\n  \"exige_assinatura\": true,\n  \"exige_validade\": false,\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documentos-regulatorios/{{documentoRegulatorioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-regulatorios",
+                "{{documentoRegulatorioId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar documento regulatorio",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-regulatorios/{{documentoRegulatorioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-regulatorios",
+                "{{documentoRegulatorioId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documentos Empresa",
+      "item": [
+        {
+          "name": "Listar documentos empresa",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar documento empresa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresa_id\": {{empresaId}},\n  \"documento_regulatorio_id\": {{documentoRegulatorioId}},\n  \"status\": \"PENDENTE\",\n  \"impacto\": 3,\n  \"data_emissao\": \"2026-02-18\",\n  \"data_validade\": \"2027-02-18\",\n  \"responsavel_area_id\": {{areaId}},\n  \"usuario_responsavel_id\": {{usuarioId}},\n  \"responsavel_tecnico\": \"Responsavel Teste\",\n  \"observacoes\": \"Documento inicial\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter documento empresa",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa/{{documentoEmpresaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa",
+                "{{documentoEmpresaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar documento empresa",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresa_id\": {{empresaId}},\n  \"documento_regulatorio_id\": {{documentoRegulatorioId}},\n  \"status\": \"EM_ELABORACAO\",\n  \"impacto\": 4,\n  \"data_emissao\": \"2026-02-18\",\n  \"data_validade\": \"2027-02-18\",\n  \"responsavel_area_id\": {{areaId}},\n  \"usuario_responsavel_id\": {{usuarioId}},\n  \"responsavel_tecnico\": \"Responsavel Atualizado\",\n  \"observacoes\": \"Atualizacao de status\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa/{{documentoEmpresaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa",
+                "{{documentoEmpresaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar documento empresa",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa/{{documentoEmpresaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa",
+                "{{documentoEmpresaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar arquivos do documento empresa",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa/{{documentoEmpresaId}}/arquivos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa",
+                "{{documentoEmpresaId}}",
+                "arquivos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar arquivo do documento empresa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo_arquivo\": \"DOCUMENTO_PRINCIPAL\",\n  \"nome_arquivo\": \"politica-privacidade.pdf\",\n  \"caminho_arquivo\": \"/uploads/politica-privacidade.pdf\",\n  \"hash_arquivo\": \"hash-demo\",\n  \"versao\": \"1.0\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa/{{documentoEmpresaId}}/arquivos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa",
+                "{{documentoEmpresaId}}",
+                "arquivos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar arquivo do documento empresa",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa/{{documentoEmpresaId}}/arquivos/{{arquivoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa",
+                "{{documentoEmpresaId}}",
+                "arquivos",
+                "{{arquivoId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documento Conteudo",
+      "item": [
+        {
+          "name": "Listar conteudos por documento empresa",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa/{{documentoEmpresaId}}/conteudos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa",
+                "{{documentoEmpresaId}}",
+                "conteudos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar conteudo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documento_empresa_id\": {{documentoEmpresaId}},\n  \"versao\": 1,\n  \"status\": \"RASCUNHO\",\n  \"titulo_versao\": \"Versao inicial\",\n  \"html\": \"<h1>Documento</h1><p>Conteudo inicial</p>\",\n  \"json_data\": null,\n  \"criado_por_usuario_id\": {{usuarioId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documentos-empresa/{{documentoEmpresaId}}/conteudos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-empresa",
+                "{{documentoEmpresaId}}",
+                "conteudos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter conteudo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documento-conteudo/{{documentoConteudoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-conteudo",
+                "{{documentoConteudoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar conteudo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documento_empresa_id\": {{documentoEmpresaId}},\n  \"versao\": 2,\n  \"status\": \"EM_REVISAO\",\n  \"titulo_versao\": \"Versao revisada\",\n  \"html\": \"<h1>Documento</h1><p>Conteudo revisado</p>\",\n  \"json_data\": null,\n  \"criado_por_usuario_id\": {{usuarioId}},\n  \"revisado_por_usuario_id\": {{usuarioId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documento-conteudo/{{documentoConteudoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-conteudo",
+                "{{documentoConteudoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar conteudo",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/documento-conteudo/{{documentoConteudoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-conteudo",
+                "{{documentoConteudoId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documento Modelo Secao",
+      "item": [
+        {
+          "name": "Listar secoes modelo por documento regulatorio",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documentos-regulatorios/{{documentoRegulatorioId}}/modelo-secoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-regulatorios",
+                "{{documentoRegulatorioId}}",
+                "modelo-secoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar secao modelo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documento_regulatorio_id\": {{documentoRegulatorioId}},\n  \"chave\": \"OBJETIVO\",\n  \"titulo\": \"Objetivo\",\n  \"descricao\": \"Finalidade do documento\",\n  \"ordem\": 1,\n  \"obrigatoria\": true,\n  \"tipo_input\": \"RICH_TEXT\",\n  \"schema_json\": null,\n  \"template_html\": null,\n  \"links\": [\n    {\n      \"titulo\": \"LGPD\",\n      \"url\": \"https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2018/lei/l13709.htm\"\n    }\n  ],\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documentos-regulatorios/{{documentoRegulatorioId}}/modelo-secoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documentos-regulatorios",
+                "{{documentoRegulatorioId}}",
+                "modelo-secoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter secao modelo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documento-modelo-secao/{{modeloSecaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-modelo-secao",
+                "{{modeloSecaoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar secao modelo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documento_regulatorio_id\": {{documentoRegulatorioId}},\n  \"chave\": \"OBJETIVO\",\n  \"titulo\": \"Objetivo (Atualizado)\",\n  \"descricao\": \"Descricao atualizada\",\n  \"ordem\": 1,\n  \"obrigatoria\": true,\n  \"tipo_input\": \"RICH_TEXT\",\n  \"schema_json\": null,\n  \"template_html\": null,\n  \"links\": [],\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documento-modelo-secao/{{modeloSecaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-modelo-secao",
+                "{{modeloSecaoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar secao modelo",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/documento-modelo-secao/{{modeloSecaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-modelo-secao",
+                "{{modeloSecaoId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documento Conteudo Secao",
+      "item": [
+        {
+          "name": "Listar secoes de conteudo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documento-conteudo/{{documentoConteudoId}}/secoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-conteudo",
+                "{{documentoConteudoId}}",
+                "secoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar secao de conteudo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documento_conteudo_id\": {{documentoConteudoId}},\n  \"modelo_secao_id\": {{modeloSecaoId}},\n  \"status\": \"EM_ANDAMENTO\",\n  \"conteudo_html\": \"<p>Texto da secao</p>\",\n  \"dados_json\": null,\n  \"checksum\": null,\n  \"atualizado_por_usuario_id\": {{usuarioId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documento-conteudo/{{documentoConteudoId}}/secoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-conteudo",
+                "{{documentoConteudoId}}",
+                "secoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter secao de conteudo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/documento-conteudo-secao/{{conteudoSecaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-conteudo-secao",
+                "{{conteudoSecaoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar secao de conteudo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documento_conteudo_id\": {{documentoConteudoId}},\n  \"modelo_secao_id\": {{modeloSecaoId}},\n  \"status\": \"CONCLUIDO\",\n  \"conteudo_html\": \"<p>Texto final da secao</p>\",\n  \"dados_json\": null,\n  \"checksum\": null,\n  \"atualizado_por_usuario_id\": {{usuarioId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documento-conteudo-secao/{{conteudoSecaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-conteudo-secao",
+                "{{conteudoSecaoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar secao de conteudo",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/documento-conteudo-secao/{{conteudoSecaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documento-conteudo-secao",
+                "{{conteudoSecaoId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Meu Perfil",
+      "item": [
+        {
+          "name": "Obter meu perfil",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar meu perfil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Usuario Atualizado\",\n  \"email\": \"{{email}}\",\n  \"foto_url\": \"https://i.pravatar.cc/200\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Trocar minha senha",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senha_atual\": \"{{senha}}\",\n  \"nova_senha\": \"NovaSenha@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me/trocar-senha",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me",
+                "trocar-senha"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -26,11 +26,7 @@ import {
   ClusterOutlined
 } from '@ant-design/icons';
 import api from '../services/api';
-
-interface Empresa {
-  id: number;
-  nome: string;
-}
+import { useEmpresaContext } from '../contexts/EmpresaContext';
 
 interface Unidade {
   id: number;
@@ -44,24 +40,23 @@ type UnidadeFormValues = Omit<Unidade, 'id' | 'empresa_nome'>;
 
 function Unidades() {
   const [unidades, setUnidades] = useState<Unidade[]>([]);
-  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [modalAberta, setModalAberta] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [form] = Form.useForm();
+  const { empresas, empresaSelecionada } = useEmpresaContext();
 
   const estaEditando = useMemo(() => editandoId !== null, [editandoId]);
 
-  async function carregarEmpresas() {
-    const response = await api.get('/empresas');
-    setEmpresas(response.data || []);
-  }
+  const unidadesFiltradas = useMemo(() => {
+    if (!empresaSelecionada) return [];
+    return unidades.filter((unidade) => unidade.empresa_id === empresaSelecionada);
+  }, [unidades, empresaSelecionada]);
 
   async function carregarUnidades(showMessage = false) {
     try {
       setCarregando(true);
-      await carregarEmpresas();
       const response = await api.get('/unidades');
       setUnidades(response.data || []);
       if (showMessage) message.success('Unidades atualizadas');
@@ -151,9 +146,12 @@ function Unidades() {
             icon={<PlusOutlined />}
             onClick={() => {
               resetarFormulario();
+              if (empresaSelecionada) {
+                form.setFieldsValue({ empresa_id: empresaSelecionada });
+              }
               setModalAberta(true);
             }}
-            disabled={!empresas.length}
+            disabled={!empresas.length || !empresaSelecionada}
           >
             Nova unidade
           </Button>
@@ -168,12 +166,12 @@ function Unidades() {
         <Card title="Lista de unidades">
           {carregando ? (
             <Skeleton active />
-          ) : unidades.length === 0 ? (
+          ) : unidadesFiltradas.length === 0 ? (
             <Empty description="Nenhuma unidade cadastrada" />
           ) : (
             <Table
               rowKey="id"
-              dataSource={unidades}
+              dataSource={unidadesFiltradas}
               pagination={false}
               size="middle"
               columns={[
