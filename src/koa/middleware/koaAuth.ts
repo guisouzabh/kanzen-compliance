@@ -1,6 +1,7 @@
 import { Context, Next } from 'koa';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../../src/errors/AppError';
+import { normalizeUserRole } from '../../utils/userRole';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 
@@ -22,7 +23,7 @@ export async function koaAuth(ctx: Context, next: Next) {
       tenantId: decoded.tenantId,
       empresaId: decoded.empresaId ?? null,
       areaId: decoded.areaId ?? null,
-      role: decoded.role ?? undefined
+      role: normalizeUserRole(decoded.role)
     };
     await next();
   } catch (err) {

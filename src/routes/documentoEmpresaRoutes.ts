@@ -13,11 +13,17 @@ import {
   deletarDocumentoEmpresa,
   listarDocumentosArquivos,
   criarDocumentoArquivo,
+  atualizarStatusDocumentoArquivo,
+  publicarDocumentoArquivo,
   deletarDocumentoArquivo,
   uploadDocumentoRegulatorioWord,
   obterOnlyofficeEditConfig,
   downloadArquivoOnlyoffice,
-  callbackOnlyofficeDocumento
+  callbackOnlyofficeDocumento,
+  listarDocumentosPublicadosVencidos,
+  listarDocumentosPublicadosVencendo30Dias,
+  listarDocumentosNaoPublicadosAtivos,
+  listarHistoricoArquivado
 } from '../controllers/documentoEmpresaController';
 
 const router = Router();
@@ -73,6 +79,22 @@ router.post(
 router.use(authMiddleware);
 
 router.get('/documentos-empresa', asyncHandler(listarDocumentosEmpresa));
+router.get(
+  '/documentos-empresa/indicadores/vencidos-publicados',
+  asyncHandler(listarDocumentosPublicadosVencidos)
+);
+router.get(
+  '/documentos-empresa/indicadores/vencendo-30-dias-publicados',
+  asyncHandler(listarDocumentosPublicadosVencendo30Dias)
+);
+router.get(
+  '/documentos-empresa/indicadores/nao-publicados-ativos',
+  asyncHandler(listarDocumentosNaoPublicadosAtivos)
+);
+router.get(
+  '/documentos-empresa/indicadores/historico-arquivado',
+  asyncHandler(listarHistoricoArquivado)
+);
 router.post('/documentos-empresa', asyncHandler(criarDocumentoEmpresa));
 router.get('/documentos-empresa/:id', asyncHandler(obterDocumentoEmpresa));
 router.put('/documentos-empresa/:id', asyncHandler(atualizarDocumentoEmpresa));
@@ -84,6 +106,14 @@ router.get(
   asyncHandler(obterOnlyofficeEditConfig)
 );
 router.post('/documentos-empresa/:id/arquivos', asyncHandler(criarDocumentoArquivo));
+router.patch(
+  '/documentos-empresa/:id/arquivos/:arquivoId/status',
+  asyncHandler(atualizarStatusDocumentoArquivo)
+);
+router.post(
+  '/documentos-empresa/:id/arquivos/:arquivoId/publicar',
+  asyncHandler(publicarDocumentoArquivo)
+);
 router.post(
   '/documentos-empresa/:id/arquivos/upload-word',
   (req, res, next) => {

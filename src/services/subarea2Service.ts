@@ -5,7 +5,7 @@ import { SubArea2 } from '../types/SubArea2';
 async function validarSubArea(tenantId: number, subareaId: number) {
   const rows = await tenantQuery<{ id: number }>(
     tenantId,
-    'SELECT id FROM subareas WHERE tenant_id = ? AND id = ?',
+    'SELECT id FROM subareas WHERE tenant_id = ? AND id = ? AND ativo = 1',
     [subareaId]
   );
 
@@ -27,11 +27,12 @@ export async function listarSubArea2Service(tenantId: number): Promise<SubArea2[
              e.id AS empresa_id,
              e.nome AS empresa_nome
         FROM subarea2 s2
-        JOIN subareas sa ON sa.id = s2.subarea_id AND sa.tenant_id = s2.tenant_id
-        JOIN areas a ON a.id = sa.area_id AND a.tenant_id = sa.tenant_id
-        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id
+        JOIN subareas sa ON sa.id = s2.subarea_id AND sa.tenant_id = s2.tenant_id AND sa.ativo = 1
+        JOIN areas a ON a.id = sa.area_id AND a.tenant_id = sa.tenant_id AND a.ativo = 1
+        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id AND u.ativo = 1
         JOIN empresas e ON e.id = u.empresa_id AND e.tenant_id = u.tenant_id
        WHERE s2.tenant_id = ?
+         AND s2.ativo = 1
        ORDER BY s2.id DESC
     `
   );
@@ -80,11 +81,13 @@ export async function obterSubArea2PorIdService(
              e.id AS empresa_id,
              e.nome AS empresa_nome
         FROM subarea2 s2
-        JOIN subareas sa ON sa.id = s2.subarea_id AND sa.tenant_id = s2.tenant_id
-        JOIN areas a ON a.id = sa.area_id AND a.tenant_id = sa.tenant_id
-        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id
+        JOIN subareas sa ON sa.id = s2.subarea_id AND sa.tenant_id = s2.tenant_id AND sa.ativo = 1
+        JOIN areas a ON a.id = sa.area_id AND a.tenant_id = sa.tenant_id AND a.ativo = 1
+        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id AND u.ativo = 1
         JOIN empresas e ON e.id = u.empresa_id AND e.tenant_id = u.tenant_id
-       WHERE s2.tenant_id = ? AND s2.id = ?
+       WHERE s2.tenant_id = ?
+         AND s2.id = ?
+         AND s2.ativo = 1
     `,
     [id]
   );
@@ -103,8 +106,8 @@ export async function atualizarSubArea2Service(
     tenantId,
     `
       UPDATE subarea2
-         SET subarea_id = ?, nome = ?, descricao = ?
-       WHERE tenant_id = ? AND id = ?
+         SET tenant_id = ?, subarea_id = ?, nome = ?, descricao = ?
+       WHERE tenant_id = ? AND id = ? AND ativo = 1
     `,
     [dados.subarea_id, dados.nome, dados.descricao ?? null, tenantId, id]
   );
@@ -121,7 +124,13 @@ export async function deletarSubArea2Service(
 ): Promise<boolean> {
   const result = await tenantExecute(
     tenantId,
-    'DELETE FROM subarea2 WHERE tenant_id = ? AND id = ?',
+    `
+      UPDATE subarea2
+         SET ativo = 0
+       WHERE tenant_id = ?
+         AND id = ?
+         AND ativo = 1
+    `,
     [id]
   );
 

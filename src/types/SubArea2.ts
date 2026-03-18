@@ -4,6 +4,7 @@ export interface SubArea2 {
   subarea_id: number;
   nome: string;
   descricao?: string | null;
+  ativo?: number;
   created_at?: string;
   subarea_nome?: string;
   area_id?: number;

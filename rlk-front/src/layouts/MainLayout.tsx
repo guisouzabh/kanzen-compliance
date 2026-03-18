@@ -2,25 +2,27 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { Layout, Menu, Button, Space, Typography, Select, Spin, Badge, Drawer, Grid, Dropdown, Avatar } from 'antd';
 import type { MenuProps } from 'antd';
-import { LogoutOutlined, BellOutlined, MenuUnfoldOutlined, UserOutlined, EditOutlined, LockOutlined } from '@ant-design/icons';
+import {
+  LogoutOutlined,
+  BellOutlined,
+  MenuUnfoldOutlined,
+  MenuFoldOutlined,
+  UserOutlined,
+  EditOutlined,
+  LockOutlined
+} from '@ant-design/icons';
 import { useEmpresaContext } from '../contexts/EmpresaContext';
 import api from '../services/api';
-import {
-  buildMobileMenuItems,
-  buildNavigationForRole,
-  buildSecondLevelMenuItems,
-  buildTopLevelMenuItems,
-  getDefaultModulePath,
-  resolveNavigationState
-} from './navigationConfig';
+import { buildMobileMenuItems, buildNavigationForRole, resolveNavigationState } from './navigationConfig';
 
 const ROUTE_TITLE_OVERRIDES: Array<{ pattern: RegExp; title: string }> = [
+  { pattern: /^\/documentos-regulatorios\/\d+\/secoes$/, title: 'Secoes do Documento Regulatorio' },
   { pattern: /^\/meu-perfil$/, title: 'Meu Perfil' },
   { pattern: /^\/notificacoes$/, title: 'Notificacoes' }
 ];
 
 function MainLayout() {
-  const { Content } = Layout;
+  const { Header, Content, Sider } = Layout;
   const { useBreakpoint } = Grid;
   const screens = useBreakpoint();
   const isMobile = !screens.lg;
@@ -30,7 +32,7 @@ function MainLayout() {
   const [naoLidas, setNaoLidas] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
-  const [forcedModuleKey, setForcedModuleKey] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('layout:sider-collapsed') === '1');
   const [nomePerfil, setNomePerfil] = useState<string | null>(null);
   const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
 
@@ -132,6 +134,10 @@ function MainLayout() {
     };
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('layout:sider-collapsed', collapsed ? '1' : '0');
+  }, [collapsed]);
+
   const usuarioRole = getUsuarioRoleFromToken();
   const usuarioNome = nomePerfil || getUsuarioNomeFromToken();
 
@@ -141,31 +147,29 @@ function MainLayout() {
     [navigationModules, location.pathname]
   );
 
-  useEffect(() => {
-    setForcedModuleKey(null);
-  }, [location.pathname]);
-
-  const currentModule = useMemo(() => {
-    if (forcedModuleKey) {
-      const forced = navigationModules.find((module) => module.key === forcedModuleKey);
-      if (forced) return forced;
-    }
-    if (navigationState.activeModule) return navigationState.activeModule;
-    return navigationModules[0] ?? null;
-  }, [forcedModuleKey, navigationModules, navigationState.activeModule]);
+  const sidebarItems = useMemo(() => buildMobileMenuItems(navigationModules), [navigationModules]);
+  const rootMenuKeys = useMemo(() => navigationModules.map((module) => module.key), [navigationModules]);
 
   useEffect(() => {
-    if (!currentModule) return;
-    setOpenKeys([currentModule.key]);
-  }, [currentModule]);
+    if (!navigationState.activeModule) return;
+    if (collapsed && !isMobile) return;
+    setOpenKeys([navigationState.activeModule.key]);
+  }, [collapsed, isMobile, navigationState.activeModule]);
 
-  const topLevelMenuItems = useMemo(() => buildTopLevelMenuItems(navigationModules), [navigationModules]);
-  const secondLevelMenuItems = useMemo(() => buildSecondLevelMenuItems(currentModule), [currentModule]);
-  const mobileMenuItems = useMemo(() => buildMobileMenuItems(navigationModules), [navigationModules]);
+  const selectedMenuKeys = useMemo(() => {
+    const activeItem = navigationState.activeItem;
+    if (!activeItem) return [];
 
-  const selectedTopKeys = currentModule ? [currentModule.key] : [];
-  const selectedSecondKeys =
-    navigationState.activeItem && !navigationState.activeItem.hiddenInMenu ? [navigationState.activeItem.path] : [];
+    if (!activeItem.hiddenInMenu) return [activeItem.path];
+
+    const activeModule = navigationState.activeModule;
+    if (!activeModule) return [];
+
+    const fallback = activeModule.items.find(
+      (item) => !item.hiddenInMenu && (activeItem.path === item.path || activeItem.path.startsWith(`${item.path}/`))
+    );
+    return fallback ? [fallback.path] : [];
+  }, [navigationState.activeItem, navigationState.activeModule]);
 
   const currentPageTitle = useMemo(() => {
     const override = ROUTE_TITLE_OVERRIDES.find((item) => item.pattern.test(location.pathname));
@@ -178,32 +182,19 @@ function MainLayout() {
     if (!isMobile) setMobileMenuOpen(false);
   }, [isMobile]);
 
-  function handleTopLevelNavigation(key: string) {
-    const module = navigationModules.find((item) => item.key === key);
-    if (!module) return;
+  function handleMenuNavigation(key: string) {
+    if (!key.startsWith('/')) return;
+    navigate(key);
+    if (isMobile) setMobileMenuOpen(false);
+  }
 
-    setForcedModuleKey(module.key);
-
-    const alreadyInsideModule = module.items.some((item) => {
-      if (location.pathname === item.path) return true;
-      return location.pathname.startsWith(`${item.path}/`);
-    });
-
-    if (!alreadyInsideModule) {
-      const defaultPath = getDefaultModulePath(module);
-      if (defaultPath) navigate(defaultPath);
+  function handleMenuOpenChange(keys: string[]) {
+    const latestOpened = keys.find((key) => !openKeys.includes(key));
+    if (latestOpened && rootMenuKeys.includes(latestOpened)) {
+      setOpenKeys([latestOpened]);
+      return;
     }
-  }
-
-  function handleSecondLevelNavigation(key: string) {
-    if (!key.startsWith('/')) return;
-    navigate(key);
-  }
-
-  function handleMobileNavigation(key: string) {
-    if (!key.startsWith('/')) return;
-    navigate(key);
-    setMobileMenuOpen(false);
+    setOpenKeys(keys);
   }
 
   function handleUserMenuClick(key: string) {
@@ -240,6 +231,57 @@ function MainLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
+      {!isMobile && (
+        <Sider
+          width={290}
+          collapsed={collapsed}
+          trigger={null}
+          style={{
+            background: '#0b5be1',
+            borderRight: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: '8px 0 28px -24px rgba(0,0,0,0.55)'
+          }}
+        >
+          <Link
+            to="/dashboard"
+            style={{
+              height: 72,
+              display: 'flex',
+              alignItems: 'center',
+              padding: collapsed ? '0 20px' : '0 18px',
+              gap: 12,
+              color: 'white'
+            }}
+          >
+            <img
+              src="/logo.png"
+              alt="Logo"
+              style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'cover', background: '#fff', flexShrink: 0 }}
+            />
+            {!collapsed && (
+              <div style={{ lineHeight: 1.1 }}>
+                <Typography.Text style={{ color: 'white', fontSize: 17, fontWeight: 700 }}>LegalK</Typography.Text>
+                <br />
+                <Typography.Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>
+                  Painel Administrativo
+                </Typography.Text>
+              </div>
+            )}
+          </Link>
+
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={selectedMenuKeys}
+            openKeys={collapsed ? [] : openKeys}
+            onOpenChange={(keys) => handleMenuOpenChange(keys as string[])}
+            items={sidebarItems}
+            onClick={({ key }) => handleMenuNavigation(String(key))}
+            style={{ background: 'transparent', borderRight: 'none' }}
+          />
+        </Sider>
+      )}
+
       <Drawer
         title={
           <Space>
@@ -259,86 +301,53 @@ function MainLayout() {
       >
         <Menu
           mode="inline"
-          selectedKeys={selectedSecondKeys}
+          selectedKeys={selectedMenuKeys}
           openKeys={openKeys}
-          onOpenChange={(keys) => setOpenKeys(keys as string[])}
-          items={mobileMenuItems}
-          onClick={({ key }) => handleMobileNavigation(String(key))}
+          onOpenChange={(keys) => handleMenuOpenChange(keys as string[])}
+          items={sidebarItems}
+          onClick={({ key }) => handleMenuNavigation(String(key))}
           style={{ borderRight: 'none' }}
         />
       </Drawer>
 
       <Layout>
-        <div
+        <Header
           style={{
+            background: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: isMobile ? '8px 10px' : '0 16px',
+            borderBottom: '1px solid #e5e7eb',
             position: 'sticky',
             top: 0,
-            zIndex: 30,
-            background: '#ffffff',
-            borderBottom: '1px solid #e5e7eb'
+            zIndex: 20,
+            height: isMobile ? 'auto' : 64,
+            lineHeight: isMobile ? 1.2 : '64px'
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: isMobile ? '10px 10px' : '10px 16px',
-              gap: 12
-            }}
-          >
-            <Space align="center" size="small">
-              {isMobile && <Button type="text" icon={<MenuUnfoldOutlined />} onClick={() => setMobileMenuOpen(true)} />}
-              <Link to="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                <img
-                  src="/logo.png"
-                  alt="Logo"
-                  style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover', background: '#fff' }}
-                />
-                {!isMobile && (
-                  <Typography.Text style={{ fontWeight: 700, fontSize: 16, color: '#1f2937' }}>LegalK</Typography.Text>
-                )}
-              </Link>
-              <Typography.Text style={{ fontWeight: 600, fontSize: isMobile ? 15 : 18, color: '#1f2937' }}>
-                {currentPageTitle}
-              </Typography.Text>
-            </Space>
-
-            <Space size={isMobile ? 'small' : 'middle'} align="center">
-              {!isMobile && (
-                <div style={{ minWidth: 260 }}>
-                  <Select
-                    loading={carregando}
-                    style={{ width: '100%' }}
-                    placeholder="Selecionar empresa"
-                    value={empresaSelecionada ?? undefined}
-                    onChange={(value) => setEmpresaSelecionada(Number(value))}
-                    options={empresas.map((empresa) => ({ label: empresa.nome, value: empresa.id }))}
-                    suffixIcon={carregando ? <Spin size="small" /> : undefined}
-                    disabled={!empresas.length}
-                  />
-                </div>
-              )}
-
-              <Dropdown
-                menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(String(key)) }}
-                trigger={['click']}
-                placement="bottomRight"
-              >
-                <Badge count={naoLidas} size="small" offset={[-2, 2]}>
-                  <Avatar
-                    size={isMobile ? 32 : 36}
-                    icon={<UserOutlined />}
-                    src={fotoPerfil ?? undefined}
-                    style={{ backgroundColor: '#0b5be1', cursor: 'pointer' }}
-                  />
-                </Badge>
-              </Dropdown>
-            </Space>
-          </div>
-
-          {isMobile && (
-            <div style={{ padding: '0 10px 10px 10px' }}>
+          {isMobile ? (
+            <div style={{ width: '100%', display: 'grid', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Space align="center" size="small">
+                  <Button type="text" icon={<MenuUnfoldOutlined />} onClick={() => setMobileMenuOpen(true)} />
+                  <Typography.Text style={{ fontWeight: 600, fontSize: 16, color: '#1f2937' }}>{currentPageTitle}</Typography.Text>
+                </Space>
+                <Dropdown
+                  menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(String(key)) }}
+                  trigger={['click']}
+                  placement="bottomRight"
+                >
+                  <Badge count={naoLidas} size="small" offset={[-2, 2]}>
+                    <Avatar
+                      size={32}
+                      icon={<UserOutlined />}
+                      src={fotoPerfil ?? undefined}
+                      style={{ backgroundColor: '#0b5be1', cursor: 'pointer' }}
+                    />
+                  </Badge>
+                </Dropdown>
+              </div>
               <Select
                 loading={carregando}
                 style={{ width: '100%' }}
@@ -350,27 +359,49 @@ function MainLayout() {
                 disabled={!empresas.length}
               />
             </div>
-          )}
-
-          {!isMobile && (
+          ) : (
             <>
-              <Menu
-                mode="horizontal"
-                selectedKeys={selectedTopKeys}
-                items={topLevelMenuItems}
-                onClick={({ key }) => handleTopLevelNavigation(String(key))}
-                style={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', paddingInline: 8 }}
-              />
-              <Menu
-                mode="horizontal"
-                selectedKeys={selectedSecondKeys}
-                items={secondLevelMenuItems}
-                onClick={({ key }) => handleSecondLevelNavigation(String(key))}
-                style={{ borderBottom: 'none', paddingInline: 8 }}
-              />
+              <Space align="center">
+                <Button
+                  type="text"
+                  icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                  onClick={() => setCollapsed((value) => !value)}
+                />
+                <Typography.Text style={{ fontWeight: 600, fontSize: 20, color: '#1f2937' }}>{currentPageTitle}</Typography.Text>
+              </Space>
+
+              <Space size="middle" align="center">
+                <div style={{ minWidth: 240 }}>
+                  <Select
+                    loading={carregando}
+                    style={{ width: '100%' }}
+                    placeholder="Selecionar empresa"
+                    value={empresaSelecionada ?? undefined}
+                    onChange={(value) => setEmpresaSelecionada(Number(value))}
+                    options={empresas.map((empresa) => ({ label: empresa.nome, value: empresa.id }))}
+                    suffixIcon={carregando ? <Spin size="small" /> : undefined}
+                    disabled={!empresas.length}
+                  />
+                </div>
+
+                <Dropdown
+                  menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(String(key)) }}
+                  trigger={['click']}
+                  placement="bottomRight"
+                >
+                  <Badge count={naoLidas} size="small" offset={[-2, 2]}>
+                    <Avatar
+                      size={36}
+                      icon={<UserOutlined />}
+                      src={fotoPerfil ?? undefined}
+                      style={{ backgroundColor: '#0b5be1', cursor: 'pointer' }}
+                    />
+                  </Badge>
+                </Dropdown>
+              </Space>
             </>
           )}
-        </div>
+        </Header>
 
         <Content style={{ padding: isMobile ? '10px' : '14px', background: '#f5f7fb' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>

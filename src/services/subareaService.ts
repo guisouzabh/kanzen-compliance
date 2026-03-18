@@ -5,7 +5,7 @@ import { SubArea } from '../types/SubArea';
 async function validarArea(tenantId: number, areaId: number) {
   const rows = await tenantQuery<{ id: number }>(
     tenantId,
-    'SELECT id FROM areas WHERE tenant_id = ? AND id = ?',
+    'SELECT id FROM areas WHERE tenant_id = ? AND id = ? AND ativo = 1',
     [areaId]
   );
 
@@ -25,10 +25,11 @@ export async function listarSubAreasService(tenantId: number): Promise<SubArea[]
              e.id AS empresa_id,
              e.nome AS empresa_nome
         FROM subareas sa
-        JOIN areas a ON a.id = sa.area_id AND a.tenant_id = sa.tenant_id
-        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id
+        JOIN areas a ON a.id = sa.area_id AND a.tenant_id = sa.tenant_id AND a.ativo = 1
+        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id AND u.ativo = 1
         JOIN empresas e ON e.id = u.empresa_id AND e.tenant_id = u.tenant_id
        WHERE sa.tenant_id = ?
+         AND sa.ativo = 1
        ORDER BY sa.id DESC
     `
   );
@@ -75,10 +76,12 @@ export async function obterSubAreaPorIdService(
              e.id AS empresa_id,
              e.nome AS empresa_nome
         FROM subareas sa
-        JOIN areas a ON a.id = sa.area_id AND a.tenant_id = sa.tenant_id
-        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id
+        JOIN areas a ON a.id = sa.area_id AND a.tenant_id = sa.tenant_id AND a.ativo = 1
+        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id AND u.ativo = 1
         JOIN empresas e ON e.id = u.empresa_id AND e.tenant_id = u.tenant_id
-       WHERE sa.tenant_id = ? AND sa.id = ?
+       WHERE sa.tenant_id = ?
+         AND sa.id = ?
+         AND sa.ativo = 1
     `,
     [id]
   );
@@ -97,8 +100,8 @@ export async function atualizarSubAreaService(
     tenantId,
     `
       UPDATE subareas
-         SET area_id = ?, nome = ?, descricao = ?
-       WHERE tenant_id = ? AND id = ?
+         SET tenant_id = ?, area_id = ?, nome = ?, descricao = ?
+       WHERE tenant_id = ? AND id = ? AND ativo = 1
     `,
     [dados.area_id, dados.nome, dados.descricao ?? null, tenantId, id]
   );
@@ -113,9 +116,27 @@ export async function deletarSubAreaService(
   id: number,
   tenantId: number
 ): Promise<boolean> {
+  await tenantExecute(
+    tenantId,
+    `
+      UPDATE subarea2
+         SET ativo = 0
+       WHERE tenant_id = ?
+         AND subarea_id = ?
+         AND ativo = 1
+    `,
+    [id]
+  );
+
   const result = await tenantExecute(
     tenantId,
-    'DELETE FROM subareas WHERE tenant_id = ? AND id = ?',
+    `
+      UPDATE subareas
+         SET ativo = 0
+       WHERE tenant_id = ?
+         AND id = ?
+         AND ativo = 1
+    `,
     [id]
   );
 

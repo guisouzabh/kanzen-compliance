@@ -5,7 +5,7 @@ import { Area } from '../types/Area';
 async function validarUnidade(tenantId: number, unidadeId: number) {
   const rows = await tenantQuery<{ id: number; empresa_id: number }>(
     tenantId,
-    'SELECT id, empresa_id FROM unidades WHERE tenant_id = ? AND id = ?',
+    'SELECT id, empresa_id FROM unidades WHERE tenant_id = ? AND id = ? AND ativo = 1',
     [unidadeId]
   );
 
@@ -27,9 +27,10 @@ export async function listarAreasService(tenantId: number): Promise<Area[]> {
              e.id AS empresa_id,
              e.nome AS empresa_nome
         FROM areas a
-        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id
+        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id AND u.ativo = 1
         JOIN empresas e ON e.id = u.empresa_id AND e.tenant_id = u.tenant_id
        WHERE a.tenant_id = ?
+         AND a.ativo = 1
        ORDER BY a.id DESC
     `
   );
@@ -82,9 +83,11 @@ export async function obterAreaPorIdService(
              e.id AS empresa_id,
              e.nome AS empresa_nome
         FROM areas a
-        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id
+        JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id AND u.ativo = 1
         JOIN empresas e ON e.id = u.empresa_id AND e.tenant_id = u.tenant_id
-       WHERE a.tenant_id = ? AND a.id = ?
+       WHERE a.tenant_id = ?
+         AND a.id = ?
+         AND a.ativo = 1
     `,
     [id]
   );
@@ -102,8 +105,8 @@ export async function atualizarAreaService(
 
   const sql = `
     UPDATE areas
-       SET empresa_id = ?, unidade_id = ?, nome = ?, descricao = ?, latitude = ?, longitude = ?
-     WHERE tenant_id = ? AND id = ?
+       SET tenant_id = ?, empresa_id = ?, unidade_id = ?, nome = ?, descricao = ?, latitude = ?, longitude = ?
+     WHERE tenant_id = ? AND id = ? AND ativo = 1
   `;
 
   const result = await tenantExecute(tenantId, sql, [
@@ -124,9 +127,40 @@ export async function atualizarAreaService(
 }
 
 export async function deletarAreaService(id: number, tenantId: number): Promise<boolean> {
+  await tenantExecute(
+    tenantId,
+    `
+      UPDATE subarea2 s2
+      JOIN subareas sa ON sa.id = s2.subarea_id AND sa.tenant_id = s2.tenant_id
+         SET s2.ativo = 0
+       WHERE s2.tenant_id = ?
+         AND sa.area_id = ?
+         AND s2.ativo = 1
+    `,
+    [id]
+  );
+
+  await tenantExecute(
+    tenantId,
+    `
+      UPDATE subareas
+         SET ativo = 0
+       WHERE tenant_id = ?
+         AND area_id = ?
+         AND ativo = 1
+    `,
+    [id]
+  );
+
   const result = await tenantExecute(
     tenantId,
-    'DELETE FROM areas WHERE tenant_id = ? AND id = ?',
+    `
+      UPDATE areas
+         SET ativo = 0
+       WHERE tenant_id = ?
+         AND id = ?
+         AND ativo = 1
+    `,
     [id]
   );
 

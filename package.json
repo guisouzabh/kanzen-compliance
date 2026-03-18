@@ -6,7 +6,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "dev:koa": "ts-node-dev --respawn --transpile-only src/koa/serverKoa.ts"
+    "dev:koa": "ts-node-dev --respawn --transpile-only src/koa/serverKoa.ts",
+    "dev:landing": "npm --prefix landing-front run dev",
+    "build:landing": "npm --prefix landing-front run build",
+    "preview:landing": "npm --prefix landing-front run preview"
   },
   "dependencies": {
     "@koa/cors": "^5.0.0",

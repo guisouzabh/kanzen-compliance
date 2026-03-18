@@ -1,0 +1,253 @@
+:root {
+  --bg-main: #f6f8ff;
+  --bg-soft: #eef3ff;
+  --blue-900: #0a3b8f;
+  --blue-700: #1d5fd1;
+  --pink-500: #ea4f9e;
+  --pink-600: #d23685;
+  --text-main: #12213f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: Poppins, 'Segoe UI', sans-serif;
+  color: var(--text-main);
+  background: radial-gradient(circle at 0% 0%, #f0f5ff 0%, #f7f9ff 45%, #fdf3fa 100%);
+}
+
+.landing-layout {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px solid rgba(10, 59, 143, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 40px;
+  max-width: min(220px, 46vw);
+  object-fit: contain;
+}
+
+.hero-section {
+  position: relative;
+  padding: 64px 24px 32px;
+  overflow: hidden;
+}
+
+.hero-title {
+  margin: 0;
+  line-height: 1.05;
+  font-size: clamp(2rem, 3.6vw, 3.8rem);
+}
+
+.hero-paragraph {
+  max-width: 60ch;
+  font-size: 1.02rem;
+}
+
+.hero-card {
+  border-radius: 20px;
+  box-shadow: 0 20px 44px rgba(10, 59, 143, 0.16);
+}
+
+.hero-glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(50px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.hero-glow-blue {
+  top: -100px;
+  left: -60px;
+  width: 280px;
+  height: 280px;
+  background: linear-gradient(180deg, #5da0ff, #0a3b8f);
+}
+
+.hero-glow-pink {
+  right: -50px;
+  top: 80px;
+  width: 240px;
+  height: 240px;
+  background: linear-gradient(180deg, #ff9cca, #ea4f9e);
+}
+
+.stats-row {
+  margin-top: 24px;
+}
+
+.section-block {
+  padding: 56px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-soft {
+  background: linear-gradient(135deg, var(--bg-soft), #fef3fb);
+  border-radius: 28px;
+}
+
+.module-card {
+  min-height: 220px;
+  border-radius: 18px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(10, 59, 143, 0.15);
+}
+
+.quote {
+  min-height: 92px;
+}
+
+.pricing-card {
+  height: 100%;
+  border-radius: 18px;
+}
+
+.pricing-card-highlight {
+  border: 2px solid rgba(10, 59, 143, 0.35);
+  box-shadow: 0 16px 34px rgba(10, 59, 143, 0.16);
+}
+
+.offer-card {
+  height: 100%;
+  border-radius: 24px;
+}
+
+.offer-card-primary {
+  background: linear-gradient(160deg, rgba(10, 59, 143, 0.98), rgba(29, 95, 209, 0.94));
+  box-shadow: 0 22px 48px rgba(10, 59, 143, 0.22);
+}
+
+.offer-card-primary .ant-typography,
+.offer-card-primary .ant-typography-secondary {
+  color: #fff;
+}
+
+.offer-card-secondary {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+  border: 1px solid rgba(10, 59, 143, 0.08);
+}
+
+.offer-mini-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.offer-mini-card {
+  border-radius: 16px;
+  border: 1px solid rgba(10, 59, 143, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.offer-feature-list {
+  display: grid;
+  gap: 10px;
+}
+
+.offer-note {
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.addon-card {
+  height: 100%;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fff 0%, #fff5fb 100%);
+}
+
+.price {
+  font-weight: 800;
+  color: var(--blue-900);
+  font-size: 1.35rem;
+  margin-bottom: 0;
+}
+
+.price-xl {
+  font-size: 2rem;
+}
+
+.cta-final {
+  text-align: center;
+  background: linear-gradient(120deg, #0a3b8f 0%, #224fa6 50%, #d23685 100%);
+  border-radius: 24px;
+  color: #fff;
+}
+
+.cta-final .ant-typography,
+.cta-final .ant-typography-secondary {
+  color: #fff;
+}
+
+.landing-footer {
+  text-align: center;
+  background: transparent;
+  padding: 40px 20px;
+}
+
+.accent-pink {
+  color: var(--pink-600);
+}
+
+@media (max-width: 767px) {
+  .landing-header {
+    padding: 0 12px;
+  }
+
+  .landing-header .ant-btn {
+    font-size: 12px;
+    padding-inline: 10px;
+  }
+
+  .brand-logo {
+    height: 34px;
+    max-width: 150px;
+  }
+
+  .hero-section {
+    padding: 40px 14px 20px;
+  }
+
+  .section-block {
+    padding: 40px 14px;
+  }
+
+  .section-soft {
+    border-radius: 18px;
+  }
+}

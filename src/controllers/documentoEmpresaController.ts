@@ -15,7 +15,13 @@ import {
   criarDocumentoArquivoService,
   deletarDocumentoArquivoService,
   obterDocumentoArquivoPorIdService,
-  atualizarHashDocumentoArquivoService
+  atualizarHashDocumentoArquivoService,
+  atualizarStatusDocumentoArquivoService,
+  publicarDocumentoArquivoService,
+  listarDocumentosPublicadosVencidosService,
+  listarDocumentosPublicadosVencendo30DiasService,
+  listarDocumentosNaoPublicadosAtivosService,
+  listarHistoricoArquivadoService
 } from '../services/documentoEmpresaService';
 import {
   documentoEmpresaSchema,
@@ -23,7 +29,9 @@ import {
 } from '../validation/documentoEmpresaSchema';
 import {
   documentoArquivoSchema,
-  DocumentoArquivoInput
+  DocumentoArquivoInput,
+  documentoArquivoStatusSchema,
+  DocumentoArquivoStatusInput
 } from '../validation/documentoArquivoSchema';
 
 const ONLYOFFICE_JWT_SECRET = process.env.ONLYOFFICE_JWT_SECRET || 'dev_onlyoffice_secret_123';
@@ -141,8 +149,53 @@ export async function criarDocumentoArquivo(req: AuthRequest, res: Response) {
   }
 
   const dados: DocumentoArquivoInput = parseResult.data;
-  const novo = await criarDocumentoArquivoService(documentoEmpresaId, dados, tenantId);
+  const novo = await criarDocumentoArquivoService(
+    documentoEmpresaId,
+    {
+      ...dados,
+      documento_empresa_id: documentoEmpresaId
+    },
+    tenantId
+  );
   return res.status(201).json(novo);
+}
+
+export async function atualizarStatusDocumentoArquivo(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const documentoEmpresaId = Number(req.params.id);
+  const arquivoId = Number(req.params.arquivoId);
+  if (Number.isNaN(documentoEmpresaId) || Number.isNaN(arquivoId)) {
+    throw new AppError('ID inválido', 400);
+  }
+
+  const parseResult = documentoArquivoStatusSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({
+      erro: 'Dados inválidos',
+      detalhes: parseResult.error.issues
+    });
+  }
+
+  const payload: DocumentoArquivoStatusInput = parseResult.data;
+  const atualizado = await atualizarStatusDocumentoArquivoService(
+    documentoEmpresaId,
+    arquivoId,
+    payload,
+    tenantId
+  );
+  return res.json(atualizado);
+}
+
+export async function publicarDocumentoArquivo(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const documentoEmpresaId = Number(req.params.id);
+  const arquivoId = Number(req.params.arquivoId);
+  if (Number.isNaN(documentoEmpresaId) || Number.isNaN(arquivoId)) {
+    throw new AppError('ID inválido', 400);
+  }
+
+  const publicado = await publicarDocumentoArquivoService(documentoEmpresaId, arquivoId, tenantId);
+  return res.json(publicado);
 }
 
 export async function deletarDocumentoArquivo(req: AuthRequest, res: Response) {
@@ -190,6 +243,7 @@ export async function uploadDocumentoRegulatorioWord(
     {
       documento_empresa_id: documentoEmpresaId,
       tipo_arquivo: 'DOCUMENTO_PRINCIPAL',
+      status: 'RASCUNHO',
       nome_arquivo: req.file.originalname,
       caminho_arquivo: publicPath,
       hash_arquivo: hashArquivo,
@@ -389,4 +443,28 @@ export async function callbackOnlyofficeDocumento(req: Request, res: Response) {
   );
 
   return res.status(200).json({ error: 0 });
+}
+
+export async function listarDocumentosPublicadosVencidos(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const dados = await listarDocumentosPublicadosVencidosService(tenantId);
+  return res.json(dados);
+}
+
+export async function listarDocumentosPublicadosVencendo30Dias(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const dados = await listarDocumentosPublicadosVencendo30DiasService(tenantId);
+  return res.json(dados);
+}
+
+export async function listarDocumentosNaoPublicadosAtivos(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const dados = await listarDocumentosNaoPublicadosAtivosService(tenantId);
+  return res.json(dados);
+}
+
+export async function listarHistoricoArquivado(req: AuthRequest, res: Response) {
+  const tenantId = req.usuario!.tenantId;
+  const dados = await listarHistoricoArquivadoService(tenantId);
+  return res.json(dados);
 }

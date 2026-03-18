@@ -132,3 +132,18 @@ ALTER TABLE areas
   ADD COLUMN latitude DECIMAL(10, 8) NULL AFTER descricao,
   ADD COLUMN longitude DECIMAL(11, 8) NULL AFTER latitude;
 ```
+
+## Landing publica (Vanttagem LGPD)
+
+Novo app separado no mesmo repositorio:
+
+- Path: `landing-front`
+- Stack: React + Vite + Ant Design
+
+Comandos pelo projeto raiz:
+
+```bash
+npm run dev:landing
+npm run build:landing
+npm run preview:landing
+```

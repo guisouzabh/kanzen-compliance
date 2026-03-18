@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Card,
   Form,
@@ -34,6 +34,10 @@ interface Empresa {
   cnpj: string;
   matriz_ou_filial: 'MATRIZ' | 'FILIAL';
   razao_social: string;
+  ramo_atuacao?: string | null;
+  cnae_principal_codigo?: string | null;
+  cnae_principal_descricao?: string | null;
+  cnaes_secundarios?: CnaeSecundario[];
   cep?: string | null;
   endereco?: string | null;
   cidade?: string | null;
@@ -43,7 +47,27 @@ interface Empresa {
   termometro_sancoes_id?: number;
 }
 
-type EmpresaFormValues = Omit<Empresa, 'id'>;
+interface CnaeSecundario {
+  codigo: string;
+  descricao: string;
+}
+
+interface CnaeBuscaItem {
+  codigo: string;
+  descricao: string;
+}
+
+type EmpresaFormValues = Omit<Empresa, 'id' | 'cnaes_secundarios'> & {
+  cnaes_secundarios_codigos?: string[];
+};
+
+function extrairMensagemErro(err: unknown, fallback: string): string {
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const response = (err as { response?: { data?: { erro?: string } } }).response;
+    if (response?.data?.erro) return response.data.erro;
+  }
+  return fallback;
+}
 
 const maturidadeOptions = [
   { value: 0, label: 'Inicial', descricao: 'Processos imprevisiveis e pouco controlados' },
@@ -132,7 +156,17 @@ function Empresas() {
   const [modalAberta, setModalAberta] = useState(false);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [logoFileList, setLogoFileList] = useState<UploadFile[]>([]);
+  const [buscandoCnae, setBuscandoCnae] = useState(false);
+  const [cnaeResultados, setCnaeResultados] = useState<CnaeBuscaItem[]>([]);
+  const [catalogoCnae, setCatalogoCnae] = useState<Record<string, string>>({});
+  const cnaeTimeoutRef = useRef<number | null>(null);
+  const cnaeRequestIdRef = useRef(0);
   const [form] = Form.useForm();
+  const cnaePrincipalCodigo = Form.useWatch<string | undefined>('cnae_principal_codigo', form);
+  const cnaesSecundariosCodigos = Form.useWatch<string[] | undefined>(
+    'cnaes_secundarios_codigos',
+    form
+  );
 
   async function carregarEmpresas(showMessage = false) {
     try {
@@ -140,8 +174,8 @@ function Empresas() {
       const response = await api.get('/empresas');
       setEmpresas(response.data);
       if (showMessage) message.success('Empresas atualizadas');
-    } catch (err: any) {
-      message.error(err?.response?.data?.erro || 'Erro ao carregar empresas');
+    } catch (err: unknown) {
+      message.error(extrairMensagemErro(err, 'Erro ao carregar empresas'));
     } finally {
       setCarregando(false);
     }
@@ -151,14 +185,107 @@ function Empresas() {
     carregarEmpresas();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (cnaeTimeoutRef.current !== null) {
+        window.clearTimeout(cnaeTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const estaEditando = useMemo(() => editandoId !== null, [editandoId]);
 
+  function incluirNoCatalogoCnae(itens: CnaeBuscaItem[]) {
+    if (!itens.length) return;
+    setCatalogoCnae((anterior) => {
+      const proximo = { ...anterior };
+      for (const item of itens) {
+        proximo[item.codigo] = item.descricao;
+      }
+      return proximo;
+    });
+  }
+
+  async function buscarCnaesOnline(termo: string) {
+    const termoLimpo = termo.trim();
+    if (termoLimpo.length < 2) {
+      setCnaeResultados([]);
+      setBuscandoCnae(false);
+      return;
+    }
+
+    const requestId = ++cnaeRequestIdRef.current;
+    setBuscandoCnae(true);
+    try {
+      const response = await api.get<CnaeBuscaItem[]>('/cnaes/busca', {
+        params: { q: termoLimpo, limit: 20 }
+      });
+      if (requestId !== cnaeRequestIdRef.current) return;
+      const resultados = Array.isArray(response.data) ? response.data : [];
+      setCnaeResultados(resultados);
+      incluirNoCatalogoCnae(resultados);
+    } catch {
+      if (requestId === cnaeRequestIdRef.current) {
+        setCnaeResultados([]);
+        message.error('Nao foi possivel consultar a base CNAE');
+      }
+    } finally {
+      if (requestId === cnaeRequestIdRef.current) {
+        setBuscandoCnae(false);
+      }
+    }
+  }
+
+  function agendarBuscaCnae(termo: string) {
+    if (cnaeTimeoutRef.current !== null) {
+      window.clearTimeout(cnaeTimeoutRef.current);
+    }
+    cnaeTimeoutRef.current = window.setTimeout(() => {
+      buscarCnaesOnline(termo);
+    }, 300);
+  }
+
+  const opcoesCnae = useMemo(() => {
+    const mapa = new Map<string, CnaeBuscaItem>();
+    for (const item of cnaeResultados) {
+      mapa.set(item.codigo, item);
+    }
+
+    const codigosSelecionados = [
+      cnaePrincipalCodigo,
+      ...(cnaesSecundariosCodigos ?? [])
+    ].filter(Boolean) as string[];
+
+    for (const codigo of codigosSelecionados) {
+      if (!mapa.has(codigo) && catalogoCnae[codigo]) {
+        mapa.set(codigo, { codigo, descricao: catalogoCnae[codigo] });
+      }
+    }
+
+    return Array.from(mapa.values()).map((item) => ({
+      value: item.codigo,
+      label: `${item.codigo} - ${item.descricao}`
+    }));
+  }, [catalogoCnae, cnaePrincipalCodigo, cnaesSecundariosCodigos, cnaeResultados]);
+
   function iniciarEdicao(empresa: Empresa) {
+    const cnaesSecundarios = empresa.cnaes_secundarios ?? [];
+    incluirNoCatalogoCnae([
+      ...(empresa.cnae_principal_codigo && empresa.cnae_principal_descricao
+        ? [{ codigo: empresa.cnae_principal_codigo, descricao: empresa.cnae_principal_descricao }]
+        : []),
+      ...cnaesSecundarios
+    ]);
+
     form.setFieldsValue({
       nome: empresa.nome,
       cnpj: empresa.cnpj,
       matriz_ou_filial: empresa.matriz_ou_filial,
       razao_social: empresa.razao_social,
+      ramo_atuacao: empresa.ramo_atuacao ?? undefined,
+      cnae_principal_codigo: empresa.cnae_principal_codigo ?? undefined,
+      cnae_principal_descricao: empresa.cnae_principal_descricao ?? undefined,
+      cnaes_secundarios_codigos: cnaesSecundarios.map((item) => item.codigo),
       cep: empresa.cep ?? undefined,
       endereco: empresa.endereco ?? undefined,
       cidade: empresa.cidade ?? undefined,
@@ -187,14 +314,40 @@ function Empresas() {
     setEditandoId(null);
     form.resetFields();
     setLogoFileList([]);
+    setCnaeResultados([]);
+    setBuscandoCnae(false);
     setModalAberta(false);
   }
 
   async function handleSubmit(values: EmpresaFormValues) {
     setSalvando(true);
     try {
+      const principalCodigo = values.cnae_principal_codigo?.trim() || null;
+      const principalDescricao = principalCodigo
+        ? catalogoCnae[principalCodigo] ?? values.cnae_principal_descricao ?? null
+        : null;
+
+      const codigosSecundarios = (values.cnaes_secundarios_codigos ?? [])
+        .filter((codigo) => codigo !== principalCodigo)
+        .slice(0, 3);
+
+      const cnaesSecundarios = codigosSecundarios
+        .map((codigo) => {
+          const descricao = catalogoCnae[codigo];
+          if (!descricao) return null;
+          return { codigo, descricao };
+        })
+        .filter((item): item is CnaeSecundario => Boolean(item));
+
       const payload = {
-        ...values,
+        nome: values.nome,
+        cnpj: values.cnpj,
+        matriz_ou_filial: values.matriz_ou_filial,
+        razao_social: values.razao_social,
+        ramo_atuacao: values.ramo_atuacao || null,
+        cnae_principal_codigo: principalCodigo,
+        cnae_principal_descricao: principalDescricao,
+        cnaes_secundarios: cnaesSecundarios,
         cep: values.cep || null,
         endereco: values.endereco || null,
         cidade: values.cidade || null,
@@ -214,8 +367,8 @@ function Empresas() {
         message.success('Empresa criada');
       }
       resetarFormulario();
-    } catch (err: any) {
-      message.error(err?.response?.data?.erro || 'Erro ao salvar empresa');
+    } catch (err: unknown) {
+      message.error(extrairMensagemErro(err, 'Erro ao salvar empresa'));
     } finally {
       setSalvando(false);
     }
@@ -227,8 +380,8 @@ function Empresas() {
       setEmpresas(prev => prev.filter(e => e.id !== id));
       if (editandoId === id) resetarFormulario();
       message.success('Empresa removida');
-    } catch (err: any) {
-      message.error(err?.response?.data?.erro || 'Erro ao excluir empresa');
+    } catch (err: unknown) {
+      message.error(extrairMensagemErro(err, 'Erro ao excluir empresa'));
     }
   }
 
@@ -245,7 +398,8 @@ function Empresas() {
       setLogoFileList(fileList);
       const file = fileList[0];
       if (file?.status === 'done') {
-        const url = (file.response as any)?.url;
+        const response = file.response as { url?: string } | undefined;
+        const url = response?.url;
         if (url) {
           form.setFieldValue('logo_url', url);
         }
@@ -255,6 +409,39 @@ function Empresas() {
       }
     }
   };
+
+  const opcoesCnaeSecundario = opcoesCnae.map((item) => ({
+    ...item,
+    disabled: Boolean(cnaePrincipalCodigo) && item.value === cnaePrincipalCodigo
+  }));
+
+  function selecionarCnaePrincipal(codigo: string) {
+    const descricao = catalogoCnae[codigo];
+    form.setFieldValue('cnae_principal_descricao', descricao ?? null);
+    const secundarios = form.getFieldValue('cnaes_secundarios_codigos') as string[] | undefined;
+    if (Array.isArray(secundarios) && secundarios.includes(codigo)) {
+      form.setFieldValue(
+        'cnaes_secundarios_codigos',
+        secundarios.filter((item) => item !== codigo)
+      );
+    }
+  }
+
+  function alterarCnaesSecundarios(codigos: string[]) {
+    if (codigos.length > 3) {
+      message.warning('Selecione no máximo 3 CNAEs secundários');
+      form.setFieldValue('cnaes_secundarios_codigos', codigos.slice(0, 3));
+      return;
+    }
+    if (cnaePrincipalCodigo && codigos.includes(cnaePrincipalCodigo)) {
+      form.setFieldValue(
+        'cnaes_secundarios_codigos',
+        codigos.filter((item) => item !== cnaePrincipalCodigo)
+      );
+      return;
+    }
+    form.setFieldValue('cnaes_secundarios_codigos', codigos);
+  }
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -331,6 +518,19 @@ function Empresas() {
               },
               { title: 'Razão Social', dataIndex: 'razao_social' },
               {
+                title: 'Ramo de atuação',
+                dataIndex: 'ramo_atuacao',
+                render: (value?: string | null) => value || '—'
+              },
+              {
+                title: 'CNAE principal',
+                dataIndex: 'cnae_principal_codigo',
+                render: (_: string | null | undefined, record: Empresa) =>
+                  record.cnae_principal_codigo && record.cnae_principal_descricao
+                    ? `${record.cnae_principal_codigo} - ${record.cnae_principal_descricao}`
+                    : '—'
+              },
+              {
                 title: 'Ações',
                 dataIndex: 'acoes',
                 width: 160,
@@ -388,7 +588,12 @@ function Empresas() {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ matriz_ou_filial: 'MATRIZ', parametro_maturidade: 0, termometro_sancoes_id: 0 }}
+          initialValues={{
+            matriz_ou_filial: 'MATRIZ',
+            parametro_maturidade: 0,
+            termometro_sancoes_id: 0,
+            cnaes_secundarios_codigos: []
+          }}
         >
           <Form.Item
             label="Nome"
@@ -425,6 +630,65 @@ function Empresas() {
             rules={[{ required: true, message: 'Informe a razão social' }]}
           >
             <Input placeholder="Razão social" />
+          </Form.Item>
+
+          <Form.Item label="Ramo de atuação" name="ramo_atuacao">
+            <Input placeholder="Ex.: Consultoria em privacidade e governança" maxLength={255} />
+          </Form.Item>
+
+          <Form.Item label="CNAE principal" name="cnae_principal_codigo">
+            <Select
+              showSearch
+              allowClear
+              placeholder="Digite código ou descrição (mínimo 2 caracteres)"
+              filterOption={false}
+              onSearch={agendarBuscaCnae}
+              options={opcoesCnae}
+              loading={buscandoCnae}
+              onSelect={selecionarCnaePrincipal}
+              onClear={() => form.setFieldValue('cnae_principal_descricao', null)}
+              notFoundContent={
+                buscandoCnae
+                  ? 'Buscando na base oficial...'
+                  : 'Digite ao menos 2 caracteres para buscar'
+              }
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="CNAEs secundários (até 3)"
+            name="cnaes_secundarios_codigos"
+            rules={[
+              {
+                validator: async (_, value: string[] | undefined) => {
+                  if (!value || value.length <= 3) return;
+                  throw new Error('Selecione no máximo 3 CNAEs secundários');
+                }
+              }
+            ]}
+            extra="Busca manual na lista oficial do IBGE/CONCLA."
+          >
+            <Select
+              mode="multiple"
+              showSearch
+              placeholder="Busque e selecione até 3 CNAEs"
+              filterOption={false}
+              maxCount={3}
+              onSearch={agendarBuscaCnae}
+              options={opcoesCnaeSecundario}
+              loading={buscandoCnae}
+              onChange={alterarCnaesSecundarios}
+              maxTagCount="responsive"
+              notFoundContent={
+                buscandoCnae
+                  ? 'Buscando na base oficial...'
+                  : 'Digite ao menos 2 caracteres para buscar'
+              }
+            />
+          </Form.Item>
+
+          <Form.Item name="cnae_principal_descricao" hidden>
+            <Input type="hidden" />
           </Form.Item>
 
           <Form.Item

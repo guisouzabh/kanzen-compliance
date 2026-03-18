@@ -3,15 +3,12 @@ import { registrarUsuarioService, loginService } from '../services/authService';
 import { asyncHandler } from '../utils/asyncHandler';
 
 export const registrarUsuario = asyncHandler(async (req: Request, res: Response) => {
-  // 🔑 Adicione 'tenantId' à desestruturação de req.body
   const { nome, email, senha, foto_url, tenant_id, empresa_id, area_id } = req.body;
 
-  // 🚨 Adicione a validação para tenantId
   if (!nome || !email || !senha || !tenant_id) {
     return res.status(400).json({ erro: 'nome, email, senha e tenantId são obrigatórios' });
   }
 
-  // ➡️ Passe o tenantId para a função de serviço
   const usuario = await registrarUsuarioService({
     nome,
     email,
@@ -19,8 +16,7 @@ export const registrarUsuario = asyncHandler(async (req: Request, res: Response)
     foto_url,
     tenant_id,
     empresa_id,
-    area_id,
-    role: 'COLABORADOR'
+    area_id
   });
   return res.status(201).json(usuario);
 });

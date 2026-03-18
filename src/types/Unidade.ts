@@ -4,6 +4,7 @@ export interface Unidade {
   empresa_id: number;
   nome: string;
   descricao?: string | null;
+  ativo?: number;
   created_at?: string;
   empresa_nome?: string;
 }

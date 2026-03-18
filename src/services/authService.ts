@@ -4,15 +4,35 @@ import { pool } from '../config/db';
 import { tenantQuery } from '../db/tenantDb';
 import { Usuario } from '../types/Usuario';
 import { AppError } from '../errors/AppError';
+import { normalizeUserRole, UserRole } from '../utils/userRole';
 
 const JWT_SECRET: Secret = (process.env.JWT_SECRET ?? 'changeme') as Secret;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '1h'; // string mesmo
 
 export async function registrarUsuarioService(dados: Usuario): Promise<Usuario> {
   const { nome, email, senha, foto_url, tenant_id, empresa_id, area_id, role } = dados;
+  if (!tenant_id) {
+    throw new AppError('tenant_id é obrigatório', 400);
+  }
 
   if (!senha) {
     throw new AppError('Senha é obrigatória', 400);
+  }
+
+  const roleNormalizado = normalizeUserRole(role);
+  if (role && !roleNormalizado) {
+    throw new AppError('Perfil inválido', 400);
+  }
+
+  let roleEfetivo: UserRole = roleNormalizado ?? 'COLABORADOR';
+  if (!roleNormalizado) {
+    const usuariosDoTenant = await tenantQuery<{ id: number }>(
+      tenant_id,
+      'SELECT id FROM usuarios WHERE tenant_id = ? LIMIT 1'
+    );
+    if (!usuariosDoTenant.length) {
+      roleEfetivo = 'GESTOR';
+    }
   }
 
   // valida vínculos opcionais com empresa e área dentro do tenant
@@ -30,7 +50,7 @@ export async function registrarUsuarioService(dados: Usuario): Promise<Usuario> 
   if (area_id) {
     const areas = await tenantQuery<{ id: number }>(
       tenant_id,
-      'SELECT id FROM areas WHERE tenant_id = ? AND id = ?',
+      'SELECT id FROM areas WHERE tenant_id = ? AND id = ? AND ativo = 1',
       [area_id]
     );
     if (!areas.length) {
@@ -42,8 +62,8 @@ export async function registrarUsuarioService(dados: Usuario): Promise<Usuario> 
         `
           SELECT a.id
             FROM areas a
-            JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id
-           WHERE a.tenant_id = ? AND a.id = ? AND u.empresa_id = ?
+            JOIN unidades u ON u.id = a.unidade_id AND u.tenant_id = a.tenant_id AND u.ativo = 1
+           WHERE a.tenant_id = ? AND a.id = ? AND a.ativo = 1 AND u.empresa_id = ?
         `,
         [area_id, empresa_id]
       );
@@ -60,7 +80,7 @@ export async function registrarUsuarioService(dados: Usuario): Promise<Usuario> 
       INSERT INTO usuarios (nome, email, senha_hash, foto_url, tenant_id, empresa_id, area_id, role)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `,
-    [nome, email, senha_hash, foto_url ?? null, tenant_id, empresa_id ?? null, area_id ?? null, role ?? 'COLABORADOR']
+    [nome, email, senha_hash, foto_url ?? null, tenant_id, empresa_id ?? null, area_id ?? null, roleEfetivo]
   );
 
   return {
@@ -70,7 +90,7 @@ export async function registrarUsuarioService(dados: Usuario): Promise<Usuario> 
     foto_url: foto_url ?? null,
     empresa_id: empresa_id ?? undefined,
     area_id: area_id ?? undefined,
-    role: role ?? 'COLABORADOR'
+    role: roleEfetivo
   };
 }
 
@@ -86,6 +106,7 @@ export async function loginService(
   }
 
   const usuario = usuarios[0];
+  const role = normalizeUserRole(usuario.role) ?? 'COLABORADOR';
 
   const senhaOk = await bcrypt.compare(senha, usuario.senha_hash);
   if (!senhaOk) {
@@ -100,7 +121,7 @@ export async function loginService(
     tenantId: usuario.tenant_id,
     empresaId: usuario.empresa_id ?? null,
     areaId: usuario.area_id ?? null,
-    role: usuario.role ?? 'COLABORADOR'
+    role
   };
 
   const options: SignOptions = {

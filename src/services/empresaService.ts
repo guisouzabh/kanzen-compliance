@@ -1,14 +1,50 @@
-import { Empresa } from '../types/Empresa';
+import { CnaeSecundario, Empresa } from '../types/Empresa';
 import { logChange } from './auditService';
 import { tenantQuery, tenantExecute } from '../db/tenantDb'
 
+type EmpresaRow = Omit<Empresa, 'cnaes_secundarios'> & {
+  cnaes_secundarios_json?: string | null;
+};
+
+function parseCnaesSecundarios(value: unknown): CnaeSecundario[] {
+  if (!value) return [];
+
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (item): item is CnaeSecundario =>
+          Boolean(item) &&
+          typeof item === 'object' &&
+          typeof (item as CnaeSecundario).codigo === 'string' &&
+          typeof (item as CnaeSecundario).descricao === 'string'
+      )
+      .map((item) => ({
+        codigo: item.codigo.trim(),
+        descricao: item.descricao.trim()
+      }))
+      .filter((item) => item.codigo.length > 0 && item.descricao.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function mapEmpresaRow(row: EmpresaRow): Empresa {
+  const { cnaes_secundarios_json, ...rest } = row;
+  return {
+    ...rest,
+    cnaes_secundarios: parseCnaesSecundarios(cnaes_secundarios_json)
+  };
+}
+
 // Lista todas as empresas do tenant
 export async function listarEmpresasService(tenantId: number): Promise<Empresa[]> {
-  const rows = await tenantQuery<Empresa>(
+  const rows = await tenantQuery<EmpresaRow>(
     tenantId,
     'SELECT * FROM empresas WHERE tenant_id = ?'
   );
-  return rows;
+  return rows.map(mapEmpresaRow);
 }
 
 // Cria empresa para um tenant
@@ -21,6 +57,10 @@ export async function criarEmpresaService(
     cnpj,
     matriz_ou_filial,
     razao_social,
+    ramo_atuacao,
+    cnae_principal_codigo,
+    cnae_principal_descricao,
+    cnaes_secundarios,
     cep,
     endereco,
     cidade,
@@ -31,13 +71,16 @@ export async function criarEmpresaService(
   } = dados;
   const maturidade = parametro_maturidade ?? 0;
   const termometro = termometro_sancoes_id ?? 0;
+  const secundariosJson = JSON.stringify(cnaes_secundarios ?? []);
 
   const sql = `
     INSERT INTO empresas (
-      tenant_id, nome, cnpj, matriz_ou_filial, razao_social, cep, endereco, cidade, estado, logo_url,
+      tenant_id, nome, cnpj, matriz_ou_filial, razao_social, ramo_atuacao,
+      cnae_principal_codigo, cnae_principal_descricao, cnaes_secundarios_json,
+      cep, endereco, cidade, estado, logo_url,
       parametro_maturidade, termometro_sancoes_id
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const result = await tenantExecute(tenantId, sql, [
@@ -45,6 +88,10 @@ export async function criarEmpresaService(
     cnpj,
     matriz_ou_filial,
     razao_social,
+    ramo_atuacao ?? null,
+    cnae_principal_codigo ?? null,
+    cnae_principal_descricao ?? null,
+    secundariosJson,
     cep ?? null,
     endereco ?? null,
     cidade ?? null,
@@ -62,6 +109,10 @@ export async function criarEmpresaService(
     cnpj,
     matriz_ou_filial,
     razao_social,
+    ramo_atuacao: ramo_atuacao ?? null,
+    cnae_principal_codigo: cnae_principal_codigo ?? null,
+    cnae_principal_descricao: cnae_principal_descricao ?? null,
+    cnaes_secundarios: cnaes_secundarios ?? [],
     cep: cep ?? null,
     endereco: endereco ?? null,
     cidade: cidade ?? null,
@@ -77,7 +128,7 @@ export async function obterEmpresaPorIdService(
   id: number,
   tenantId: number
 ): Promise<Empresa | null> {
-  const rows = await tenantQuery<Empresa>(
+  const rows = await tenantQuery<EmpresaRow>(
     tenantId,
     'SELECT * FROM empresas WHERE tenant_id = ? AND id = ?',
     [id]
@@ -87,7 +138,7 @@ export async function obterEmpresaPorIdService(
 
   await logChange('Empresa', 'INFO', { tenantId, message: `consulta por id: ${id}` });
 
-  return rows[0];
+  return mapEmpresaRow(rows[0]);
 }
 
 // Atualiza empresa do tenant
@@ -101,6 +152,10 @@ export async function atualizarEmpresaService(
     cnpj,
     matriz_ou_filial,
     razao_social,
+    ramo_atuacao,
+    cnae_principal_codigo,
+    cnae_principal_descricao,
+    cnaes_secundarios,
     cep,
     endereco,
     cidade,
@@ -111,10 +166,12 @@ export async function atualizarEmpresaService(
   } = dados;
   const maturidade = parametro_maturidade ?? 0;
   const termometro = termometro_sancoes_id ?? 0;
+  const secundariosJson = JSON.stringify(cnaes_secundarios ?? []);
 
   const sql = `
     UPDATE empresas
-       SET tenant_id = ?, nome = ?, cnpj = ?, matriz_ou_filial = ?, razao_social = ?,
+       SET tenant_id = ?, nome = ?, cnpj = ?, matriz_ou_filial = ?, razao_social = ?, ramo_atuacao = ?,
+           cnae_principal_codigo = ?, cnae_principal_descricao = ?, cnaes_secundarios_json = ?,
            cep = ?, endereco = ?, cidade = ?, estado = ?, logo_url = ?, parametro_maturidade = ?,
            termometro_sancoes_id = ?
      WHERE tenant_id = ? AND id = ?
@@ -125,6 +182,10 @@ export async function atualizarEmpresaService(
     cnpj,
     matriz_ou_filial,
     razao_social,
+    ramo_atuacao ?? null,
+    cnae_principal_codigo ?? null,
+    cnae_principal_descricao ?? null,
+    secundariosJson,
     cep ?? null,
     endereco ?? null,
     cidade ?? null,
@@ -149,6 +210,10 @@ export async function atualizarEmpresaService(
     cnpj,
     matriz_ou_filial,
     razao_social,
+    ramo_atuacao: ramo_atuacao ?? null,
+    cnae_principal_codigo: cnae_principal_codigo ?? null,
+    cnae_principal_descricao: cnae_principal_descricao ?? null,
+    cnaes_secundarios: cnaes_secundarios ?? [],
     cep: cep ?? null,
     endereco: endereco ?? null,
     cidade: cidade ?? null,

@@ -19,58 +19,20 @@ export interface NavigationModule {
 
 const NAVIGATION_MODULES: NavigationModule[] = [
   {
-    key: 'mestre',
-    label: 'Mestre',
-    roles: ['ADMIN_MESTRE'],
-    items: [
-      {
-        key: 'mestre-admin',
-        label: 'Administracao Mestre',
-        path: '/mestre',
-        roles: ['ADMIN_MESTRE']
-      },
-      {
-        key: 'mestre-auditoria',
-        label: 'Auditoria da Plataforma',
-        path: '/mestre/auditoria-plataforma',
-        roles: ['ADMIN_MESTRE']
-      }
-    ]
-  },
-  {
     key: 'minha-empresa',
     label: 'Minha Empresa',
     items: [
       { key: 'empresa-dados', label: 'Dados da Empresa', path: '/empresas' },
       { key: 'empresa-usuarios', label: 'Usuarios da Empresa', path: '/usuarios' },
-      { key: 'empresa-unidades', label: 'Unidades', path: '/unidades' },
-      { key: 'empresa-areas', label: 'Areas', path: '/areas' },
-      { key: 'empresa-subareas', label: 'Subareas', path: '/subareas' },
-      { key: 'empresa-subareas2', label: 'Subarea 2', path: '/subareas2' },
       { key: 'empresa-hierarquia', label: 'Hierarquia', path: '/hierarquia' }
-    ]
-  },
-  {
-    key: 'documentos',
-    label: 'Documentos',
-    items: [
-      { key: 'documentos-regulatorios', label: 'Documentos Regulatorios', path: '/documentos-regulatorios' },
-      { key: 'documentos-empresa', label: 'Documentos da Empresa', path: '/documentos-empresa' },
-      { key: 'documentos-modelo-secoes', label: 'Modelo de Secoes', path: '/documentos-modelo-secoes' },
-      { key: 'documentos-conteudo', label: 'Conteudo e Secoes', path: '/documentos-conteudo-secoes' },
-      {
-        key: 'documentos-secoes-detalhe',
-        label: 'Secoes do Documento',
-        path: '/documentos-regulatorios',
-        hiddenInMenu: true
-      }
     ]
   },
   {
     key: 'governanca',
     label: 'Governanca',
     items: [
-      { key: 'governanca-comites', label: 'Comites', path: '/comites' },
+      { key: 'governanca-documentos-empresa', label: 'Documentos da Empresa', path: '/documentos-empresa' },
+      { key: 'governanca-comite', label: 'Comite', path: '/comites' },
       { key: 'governanca-dpo', label: 'DPO', path: '/dpo' }
     ]
   },
@@ -79,6 +41,7 @@ const NAVIGATION_MODULES: NavigationModule[] = [
     label: 'Inventario de Dados',
     items: [
       { key: 'inventario-lista', label: 'Inventario', path: '/inventario-dados' },
+      { key: 'inventario-base-legais', label: 'Base Legais', path: '/base-legais' },
       { key: 'inventario-categorias', label: 'Categorias de Dados', path: '/categorias-dados' },
       { key: 'inventario-processos', label: 'Processos', path: '/processos' },
       { key: 'inventario-mapa', label: 'Mapa LGPD', path: '/lgpd-mapa' }
@@ -136,6 +99,31 @@ const NAVIGATION_MODULES: NavigationModule[] = [
     key: 'direitos-titulares',
     label: 'Direitos dos Titulares de Dados',
     items: [{ key: 'titular-solicitacoes', label: 'Solicitacoes', path: '/solicitacoes-titular' }]
+  },
+  {
+    key: 'mestre',
+    label: 'Mestre',
+    roles: ['ADMIN_MESTRE'],
+    items: [
+      {
+        key: 'mestre-documentos-regulatorios',
+        label: 'Cadastro de Documentos Regulatorios',
+        path: '/documentos-regulatorios',
+        roles: ['ADMIN_MESTRE']
+      },
+      {
+        key: 'mestre-admin',
+        label: 'Administracao Mestre',
+        path: '/mestre',
+        roles: ['ADMIN_MESTRE']
+      },
+      {
+        key: 'mestre-auditoria',
+        label: 'Auditoria da Plataforma',
+        path: '/mestre/auditoria-plataforma',
+        roles: ['ADMIN_MESTRE']
+      }
+    ]
   }
 ];
 

@@ -6,9 +6,7 @@ import {
   BellOutlined,
   ClusterOutlined,
   DashboardOutlined,
-  DeploymentUnitOutlined,
   FileTextOutlined,
-  NodeIndexOutlined,
   SettingOutlined,
   UserOutlined
 } from '@ant-design/icons';
@@ -50,10 +48,7 @@ const MENU_TREE: MenuNode[] = [
     icon: <FileTextOutlined />,
     label: 'Documentos',
     children: [
-      { key: '/documentos-empresa', icon: <FileTextOutlined />, label: 'Documentos da Empresa' },
-      { key: '/documento-conteudo', icon: <FileTextOutlined />, label: 'Documento Conteúdo' },
-      { key: '/documentos-conteudo-secoes', icon: <FileTextOutlined />, label: 'Conteúdo por Seção' },
-      { key: '/assistente-secoes', icon: <FileTextOutlined />, label: 'Assistente de Seções' }
+      { key: '/documentos-empresa', icon: <FileTextOutlined />, label: 'Documentos da Empresa' }
     ]
   },
   {
@@ -78,9 +73,6 @@ const MENU_TREE: MenuNode[] = [
     visibility: 'GESTOR_ONLY',
     children: [
       { key: '/empresas', icon: <ApartmentOutlined />, label: 'Cadastro de Empresas' },
-      { key: '/areas', icon: <ClusterOutlined />, label: 'Áreas' },
-      { key: '/subareas', icon: <NodeIndexOutlined />, label: 'Subáreas' },
-      { key: '/subareas2', icon: <NodeIndexOutlined />, label: 'Subárea 2' },
       { key: '/hierarquia', icon: <ClusterOutlined />, label: 'Hierarquia' }
     ]
   },
@@ -91,7 +83,6 @@ const MENU_TREE: MenuNode[] = [
     label: 'Configurações',
     visibility: 'GESTOR_ONLY',
     children: [
-      { key: '/unidades', icon: <DeploymentUnitOutlined />, label: 'Unidades' },
       { key: '/usuarios', icon: <UserOutlined />, label: 'Usuários' }
     ]
   }

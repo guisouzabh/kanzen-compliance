@@ -14,7 +14,7 @@ const TAG_ENTITY_REQUISITO = 'REQUISITO';
 async function validarArea(tenantId: number, areaId: number) {
   const areas = await tenantQuery<{ id: number }>(
     tenantId,
-    'SELECT id FROM areas WHERE tenant_id = ? AND id = ?',
+    'SELECT id FROM areas WHERE tenant_id = ? AND id = ? AND ativo = 1',
     [areaId]
   );
   if (!areas.length) {

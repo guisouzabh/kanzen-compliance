@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Button,
   Card,
@@ -81,7 +80,6 @@ const impactoOptions = [
 ];
 
 function DocumentosRegulatorios() {
-  const navigate = useNavigate();
   const [documentos, setDocumentos] = useState<DocumentoRegulatorio[]>([]);
   const [classificacoes, setClassificacoes] = useState<Classificacao[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -277,22 +275,9 @@ function DocumentosRegulatorios() {
                 {
                   title: 'Ações',
                   dataIndex: 'acoes',
-                  width: 290,
+                  width: 200,
                   render: (_: unknown, record: DocumentoRegulatorio) => (
                     <Space>
-                      <Button
-                        size="small"
-                        icon={<FileTextOutlined />}
-                        onClick={() =>
-                          navigate(`/documentos-regulatorios/${record.id}/secoes`, {
-                            state: {
-                              documentoNome: record.nome
-                            }
-                          })
-                        }
-                      >
-                        Seções
-                      </Button>
                       <Button size="small" icon={<EditOutlined />} onClick={() => iniciarEdicao(record)}>
                         Editar
                       </Button>
