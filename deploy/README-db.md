@@ -98,6 +98,36 @@ Esse script:
 - remove hosts antigos do usuario `vanttagem_admin`
 - recria o acesso administrativo apenas para o IP atual
 
+## 3.1 Reparo rapido quando o DBeaver retornar access denied
+
+Se o banco estiver de pe, mas o DBeaver retornar:
+
+```text
+Access denied for user 'vanttagem_admin'@'SEU_IP'
+```
+
+rode:
+
+```bash
+cd ~/apps/vanttagem.com.br
+chmod +x reparar-admin-db.sh
+./reparar-admin-db.sh 177.182.222.161
+```
+
+O script:
+
+- reaplica a regra do UFW
+- recria o host permitido do usuario `vanttagem_admin`
+- mostra os usuarios cadastrados
+- mostra os grants efetivos
+
+Se ainda falhar depois disso, quase sempre o problema e um destes:
+
+- senha digitada no DBeaver diferente da `MYSQL_ADMIN_PASSWORD`
+- regra antiga no firewall externo da Contabo
+- IP atual diferente do IP informado
+- `deploy/.env.db` alterado depois da conexao ter sido salva no DBeaver
+
 ## 4. Firewall externo da Contabo
 
 Voce precisa replicar a mesma regra no firewall externo da VPS.
