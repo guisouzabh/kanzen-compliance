@@ -128,6 +128,25 @@ Se ainda falhar depois disso, quase sempre o problema e um destes:
 - IP atual diferente do IP informado
 - `deploy/.env.db` alterado depois da conexao ter sido salva no DBeaver
 
+## 3.2 Resetar a senha admin para uma senha temporaria conhecida
+
+Se os grants estiverem corretos, o problema tende a ser a senha efetiva usada no DBeaver.
+
+Use uma senha temporaria simples, sem ambiguidade visual, por exemplo:
+
+```bash
+cd ~/apps/vanttagem.com.br
+chmod +x resetar-senha-admin-db.sh
+./resetar-senha-admin-db.sh 177.182.222.161 VanttagemAdmin2026Acesso
+```
+
+Depois teste no DBeaver com:
+
+- usuario: `vanttagem_admin`
+- senha: `VanttagemAdmin2026Acesso`
+
+Se funcionar, voce confirma que o problema era a senha anterior. Apos validar, troque para uma senha forte e atualize o `deploy/.env.db`.
+
 ## 4. Firewall externo da Contabo
 
 Voce precisa replicar a mesma regra no firewall externo da VPS.
