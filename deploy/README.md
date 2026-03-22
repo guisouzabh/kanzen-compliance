@@ -45,12 +45,18 @@ nano deploy/.env.landing
 docker compose --env-file deploy/.env.landing -f deploy/docker-compose.landing.yml up -d --build
 ```
 
-Para atualizacoes futuras:
+Para atualizacoes futuras, use o script da raiz do projeto:
 
 ```bash
 cd /opt/vanttagem
-git pull
-docker compose --env-file deploy/.env.landing -f deploy/docker-compose.landing.yml up -d --build
+./atualizar-landing.sh
+```
+
+Se for a primeira vez no servidor:
+
+```bash
+cd /opt/vanttagem
+chmod +x atualizar-landing.sh
 ```
 
 ### 4. Validar
@@ -72,6 +78,7 @@ docker compose --env-file deploy/.env.landing -f deploy/docker-compose.landing.y
 docker compose --env-file deploy/.env.landing -f deploy/docker-compose.landing.yml logs -f caddy
 docker compose --env-file deploy/.env.landing -f deploy/docker-compose.landing.yml logs -f landing
 docker compose --env-file deploy/.env.landing -f deploy/docker-compose.landing.yml up -d --build
+./atualizar-landing.sh
 ```
 
 ## Como gerar valores de producao
