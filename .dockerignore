@@ -1,0 +1,15 @@
+node_modules
+dist
+.git
+.gitignore
+.DS_Store
+.env
+npm-debug.log*
+uploads/*
+!uploads/.gitkeep
+arquivos-s3/*
+!arquivos-s3/.gitkeep
+landing-front/node_modules
+landing-front/dist
+rlk-front/node_modules
+rlk-front/dist

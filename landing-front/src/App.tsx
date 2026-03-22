@@ -76,20 +76,20 @@ const modules = [
 
 const proofPoints = [
   'Entrada objetiva por R$ 299,00/mes no pacote principal',
-  '3 usuarios estrategicos e 10 usuarios de tarefa incluidos',
+  '1 usuario comum e 5 usuarios de tarefa incluidos no plano basico',
   'Plano de acao, evidencias e trilha operacional em um unico fluxo',
-  'Expansao por adicionais comerciais sem inflar a contratacao inicial'
+  'Expansao com pacotes funcionais e licenciamento adicional sob demanda'
 ];
 
 const coreOffer = {
   name: 'Pacote Sistema Basico',
   price: 'R$ 299,00/mes',
   description:
-    'Oferta principal para iniciar a operacao de compliance com base estruturada, usuarios essenciais e possibilidade de crescimento modular.',
+    'Oferta principal para iniciar a operacao de compliance com base estruturada, acesso essencial e possibilidade de crescimento modular.',
   audience: 'Ideal para empresas que querem sair da planilha e entrar em uma rotina real de LGPD.',
   features: [
-    '3 usuarios completos para liderancas e operacao central',
-    '10 usuarios de tarefa para execucao distribuida',
+    '1 usuario comum para lideranca e gestao central',
+    '5 usuarios de tarefa para execucao distribuida',
     'Base para diagnostico, governanca, inventarios, risco, auditoria, documentos e processos',
     'Contratacao simples, sem obrigar servicos adicionais no inicio'
   ]
@@ -132,12 +132,27 @@ const additionalPackages = [
     value: 'R$ 499,00',
     details: 'Oferta pensada para pequenas empresas que precisam de apoio recorrente mais leve.',
     tag: 'Servico consultivo'
+  }
+];
+
+const userPackages = [
+  {
+    title: 'Pacote com 1 usuario comum',
+    value: 'R$ 36,90/mes',
+    details: 'Cada usuario comum adicional libera tambem 5 usuarios de tarefa.',
+    tag: 'Licenciamento'
   },
   {
-    title: 'Pacote Usuarios B',
-    value: 'R$ 99,00',
-    details: 'Expansao de licenciamento com 1 usuario adicional e mais 5 usuarios de tarefa.',
-    tag: 'Expansao do sistema'
+    title: 'Pacote com 3 usuarios comuns',
+    value: 'R$ 99,00/mes',
+    details: 'Expansao para equipes que precisam crescer mais rapido com melhor custo por usuario.',
+    tag: 'Licenciamento'
+  },
+  {
+    title: 'Pacote com 10 usuarios tarefa',
+    value: 'R$ 89,90/mes',
+    details: 'Pacote dedicado para ampliar apenas a capacidade operacional de execucao.',
+    tag: 'Operacional'
   }
 ];
 
@@ -328,7 +343,7 @@ function App() {
             </Col>
             <Col xs={12} md={6}>
               <Card>
-                <Statistic title="Usuarios inclusos" value="3 + 10" prefix={<TeamOutlined />} />
+                <Statistic title="Usuarios inclusos" value="1 + 5" prefix={<TeamOutlined />} />
               </Card>
             </Col>
             <Col xs={12} md={6}>
@@ -463,8 +478,8 @@ function App() {
                 <Space direction="vertical" size={18}>
                   <Title level={4}>Como aumentar receita sem travar a venda</Title>
                   <Paragraph>
-                    O sistema basico deve ser a resposta padrao. Os pacotes adicionais entram por contexto comercial, maturidade do
-                    cliente ou necessidade operacional.
+                    O sistema basico deve ser a resposta padrao. Os pacotes funcionais entram por contexto comercial e o
+                    licenciamento adicional entra conforme a equipe cresce.
                   </Paragraph>
                   <div className="offer-mini-grid">
                     <Card size="small" className="offer-mini-card">
@@ -489,6 +504,10 @@ function App() {
           <Title level={3} id="adicionais">
             Pacotes adicionais
           </Title>
+          <Paragraph>
+            Estes pacotes ampliam capacidade funcional e valor percebido da operacao. O licenciamento adicional fica em uma camada
+            separada para manter a oferta clara.
+          </Paragraph>
           <Row gutter={[16, 16]}>
             {additionalPackages.map((addon) => (
               <Col xs={24} md={12} lg={8} key={addon.title}>
@@ -504,6 +523,33 @@ function App() {
                     onClick={() => trackEvent('cta_click', `adicional_${addon.title}`)}
                   >
                     Solicitar adicional
+                  </Button>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          <Divider />
+          <Title level={3}>Pacotes de usuarios adicionais</Title>
+          <Paragraph>
+            O plano basico comeca com 1 usuario comum e 5 usuarios de tarefa. Quando a operacao crescer, voce expande licencas por
+            pacote mensal sem trocar de plano.
+          </Paragraph>
+          <Row gutter={[16, 16]}>
+            {userPackages.map((pack) => (
+              <Col xs={24} md={12} lg={8} key={pack.title}>
+                <Card className="pricing-card" bordered={false}>
+                  <Tag color={pack.tag === 'Licenciamento' ? 'blue' : 'default'}>{pack.tag}</Tag>
+                  <Title level={4}>{pack.title}</Title>
+                  <Paragraph className="price">{pack.value}</Paragraph>
+                  <Paragraph>{pack.details}</Paragraph>
+                  <Button
+                    block
+                    href={whatsappLink(`licenciamento_${pack.title.toLowerCase().replaceAll(' ', '_')}`)}
+                    target="_blank"
+                    onClick={() => trackEvent('cta_click', `licenciamento_${pack.title}`)}
+                  >
+                    Quero ampliar acessos
                   </Button>
                 </Card>
               </Col>

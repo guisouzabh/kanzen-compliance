@@ -1,0 +1,27 @@
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      - landing
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env.landing
+    volumes:
+      - ./Caddyfile.landing:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  landing:
+    build:
+      context: ../landing-front
+      dockerfile: Dockerfile
+      args:
+        VITE_WHATSAPP_NUMBER: ${VITE_WHATSAPP_NUMBER}
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

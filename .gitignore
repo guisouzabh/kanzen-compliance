@@ -3,3 +3,6 @@ rlk-front/node_modules/
 .env
 .DS_Store
 *.zip
+dist/
+rlk-front/dist/
+landing-front/dist/

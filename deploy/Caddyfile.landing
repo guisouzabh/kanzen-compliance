@@ -1,0 +1,12 @@
+{
+  email {$ACME_EMAIL}
+}
+
+www.vanttagem.com.br {
+  redir https://vanttagem.com.br{uri} permanent
+}
+
+vanttagem.com.br {
+  encode gzip zstd
+  reverse_proxy landing:80
+}
