@@ -38,7 +38,7 @@ Preencha:
 Fluxo sugerido para a VPS:
 
 ```bash
-cd /opt/vanttagem
+cd ~/apps/vanttagem.com.br
 git clone <SEU_REPOSITORIO> .
 cp deploy/.env.landing.example deploy/.env.landing
 nano deploy/.env.landing
@@ -48,14 +48,14 @@ docker compose --env-file deploy/.env.landing -f deploy/docker-compose.landing.y
 Para atualizacoes futuras, use o script da raiz do projeto:
 
 ```bash
-cd /opt/vanttagem
+cd ~/apps/vanttagem.com.br
 ./atualizar-landing.sh
 ```
 
 Se for a primeira vez no servidor:
 
 ```bash
-cd /opt/vanttagem
+cd ~/apps/vanttagem.com.br
 chmod +x atualizar-landing.sh
 ```
 
@@ -80,6 +80,12 @@ docker compose --env-file deploy/.env.landing -f deploy/docker-compose.landing.y
 docker compose --env-file deploy/.env.landing -f deploy/docker-compose.landing.yml up -d --build
 ./atualizar-landing.sh
 ```
+
+## Banco antes da fase 2
+
+Guia dedicado:
+
+- [README-db.md](/Users/guilhermesouza/kanzen-compliance/deploy/README-db.md)
 
 ## Como gerar valores de producao
 

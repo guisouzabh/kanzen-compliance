@@ -57,6 +57,12 @@ services:
       MARIADB_USER: ${MYSQL_USER}
       MARIADB_PASSWORD: ${MYSQL_PASSWORD}
       MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${DB_PUBLIC_PORT:-3306}:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --bind-address=0.0.0.0
     volumes:
       - mariadb_data:/var/lib/mysql
     healthcheck:
@@ -69,5 +75,6 @@ volumes:
   api_uploads:
   api_arquivos_s3:
   mariadb_data:
+    name: vanttagem_mariadb_data
   caddy_data:
   caddy_config:
