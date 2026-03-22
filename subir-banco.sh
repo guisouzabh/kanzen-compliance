@@ -40,6 +40,9 @@ TARGET_IP="${1:-${DB_ALLOWED_IP:-$SSH_SOURCE_IP}}"
 [[ -n "${DB_PUBLIC_PORT:-}" ]] || fail "DB_PUBLIC_PORT nao definido em $ENV_FILE"
 [[ -n "$TARGET_IP" ]] || fail "Informe o IP permitido como argumento ou em DB_ALLOWED_IP"
 
+log "Garantindo rede Docker compartilhada"
+docker network inspect vanttagem_shared >/dev/null 2>&1 || docker network create vanttagem_shared >/dev/null
+
 log "Subindo o MariaDB"
 compose up -d db
 

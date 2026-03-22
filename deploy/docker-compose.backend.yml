@@ -1,0 +1,49 @@
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      - landing
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env.backend
+    volumes:
+      - ./Caddyfile.backend:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  landing:
+    build:
+      context: ../landing-front
+      dockerfile: Dockerfile
+      args:
+        VITE_WHATSAPP_NUMBER: ${VITE_WHATSAPP_NUMBER}
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile.api
+    restart: unless-stopped
+    env_file:
+      - .env.backend
+    volumes:
+      - api_uploads:/app/uploads
+      - api_arquivos_s3:/app/arquivos-s3
+    networks:
+      - default
+      - shared
+
+volumes:
+  api_uploads:
+  api_arquivos_s3:
+  caddy_data:
+  caddy_config:
+
+networks:
+  shared:
+    name: vanttagem_shared
+    external: true

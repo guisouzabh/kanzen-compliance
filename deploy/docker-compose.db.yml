@@ -17,6 +17,11 @@ services:
       - --bind-address=0.0.0.0
     volumes:
       - mariadb_data:/var/lib/mysql
+    networks:
+      shared:
+        aliases:
+          - db
+          - mariadb
     healthcheck:
       test: ["CMD", "mariadb-admin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
@@ -26,3 +31,8 @@ services:
 volumes:
   mariadb_data:
     name: vanttagem_mariadb_data
+
+networks:
+  shared:
+    name: vanttagem_shared
+    external: true

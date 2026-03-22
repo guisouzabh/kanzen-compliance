@@ -1,6 +1,8 @@
 node_modules/
 rlk-front/node_modules/
 .env
+deploy/.env.*
+!deploy/.env.*.example
 .DS_Store
 *.zip
 dist/
