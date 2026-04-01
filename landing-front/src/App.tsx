@@ -36,7 +36,7 @@ const { Title, Paragraph, Text } = Typography;
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? '5500000000000';
 const DEFAULT_MESSAGE =
-  'Oi, quero conhecer o Vanttagem LGPD e entender o melhor plano para minha empresa.';
+  'Oi, quero estruturar a operacao LGPD da minha empresa e entender o melhor plano no Vanttagem.';
 
 const modules = [
   {
@@ -78,23 +78,23 @@ const modules = [
 ];
 
 const proofPoints = [
+  'Diagnostico gratuito para mapear maturidade LGPD antes da decisao comercial',
   'Entrada objetiva por R$ 299,00/mes no pacote principal',
   '1 usuario comum e 5 usuarios de tarefa incluidos no plano basico',
-  'Plano de acao, evidencias e trilha operacional em um unico fluxo',
-  'Expansao com pacotes funcionais e licenciamento adicional sob demanda'
+  'Governanca, inventario, risco, auditoria e documentos em um unico fluxo com evidencias'
 ];
 
 const coreOffer = {
   name: 'Pacote Sistema Basico',
   price: 'R$ 299,00/mes',
   description:
-    'Oferta principal para iniciar a operacao de compliance com base estruturada, acesso essencial e possibilidade de crescimento modular.',
-  audience: 'Ideal para empresas que querem sair da planilha e entrar em uma rotina real de LGPD.',
+    'Oferta principal para sair do improviso, organizar responsabilidades e manter uma rotina de compliance com trilha auditavel.',
+  audience: 'Ideal para empresas que querem trocar planilha dispersa por operacao LGPD previsivel em poucas semanas.',
   features: [
-    '1 usuario comum para lideranca e gestao central',
+    '1 usuario comum para lideranca e governanca central',
     '5 usuarios de tarefa para execucao distribuida',
-    'Base para diagnostico, governanca, inventarios, risco, auditoria, documentos e processos',
-    'Contratacao simples, sem obrigar servicos adicionais no inicio'
+    'Base completa para diagnostico, governanca, inventarios, risco, auditoria, documentos e processos',
+    'Contratacao simples, com expansao por modulos apenas quando fizer sentido'
   ]
 };
 
@@ -103,7 +103,7 @@ const additionalPackages = [
     title: 'Treinamento',
     value: 'R$ 99,00',
     details:
-      'Agenda, turmas, certificado e conteudos de onboarding, introducao LGPD, mapeamento, DPO e atendimento. Ate 100 participantes.',
+      'Agenda, turmas, certificado e conteudos de onboarding, introducao LGPD, mapeamento, DPO e atendimento para acelerar adocao interna. Ate 100 participantes.',
     tag: 'Pacote adicional'
   },
   {
@@ -115,7 +115,7 @@ const additionalPackages = [
   {
     title: 'Portal',
     value: 'R$ 149,00',
-    details: 'Gestao de incidentes, direitos dos titulares, canal de privacidade e politicas para o site.',
+    details: 'Gestao de incidentes, direitos dos titulares, canal de privacidade e politicas para o site em um unico pacote.',
     tag: 'Pacote adicional'
   },
   {
@@ -127,13 +127,13 @@ const additionalPackages = [
   {
     title: 'Pacote Consultoria A',
     value: 'R$ 1.000,00',
-    details: '6 reunioes de 45 minutos para acelerar desenho, implantacao e tomada de decisao.',
+    details: '6 reunioes de 45 minutos para acelerar desenho, implantacao e tomada de decisao com apoio especializado.',
     tag: 'Servico consultivo'
   },
   {
     title: 'Pacote DPO',
     value: 'R$ 499,00',
-    details: 'Oferta pensada para pequenas empresas que precisam de apoio recorrente mais leve.',
+    details: 'Oferta para pequenas empresas que precisam de apoio recorrente com previsibilidade de custo.',
     tag: 'Servico consultivo'
   }
 ];
@@ -154,7 +154,7 @@ const userPackages = [
   {
     title: 'Pacote com 10 usuarios tarefa',
     value: 'R$ 89,90/mes',
-    details: 'Pacote dedicado para ampliar apenas a capacidade operacional de execucao.',
+    details: 'Pacote dedicado para ampliar capacidade operacional sem elevar o custo da camada de gestao.',
     tag: 'Operacional'
   }
 ];
@@ -163,7 +163,7 @@ const hotmartProducts = [
   {
     title: 'Diagnostico LGPD Bronze',
     value: 'Gratuito',
-    details: 'Produto de entrada para marketing e geracao de demanda.',
+    details: 'Produto de entrada para educacao, captura e qualificacao de novos leads.',
     tag: 'Entrada'
   },
   {
@@ -281,12 +281,13 @@ function App() {
         </div>
         <Button
           type="primary"
+          className="cta-primary"
           size="large"
           href={whatsappLink('header')}
           target="_blank"
           onClick={() => trackEvent('cta_click', 'header')}
         >
-          Falar no WhatsApp
+          Falar com especialista
         </Button>
       </Header>
 
@@ -298,26 +299,28 @@ function App() {
           <Row gutter={[32, 32]} align="middle">
             <Col xs={24} lg={14}>
               <Space direction="vertical" size={20}>
-                <Tag color="blue">Sistema de Compliance para LGPD</Tag>
+                <Tag color="blue">LGPD operacional, sem improviso</Tag>
                 <Title level={1} className="hero-title">
-                  Tire a LGPD do papel e ganhe controle real da sua operacao
+                  Sua LGPD trava quando cada area opera sem metodo
                 </Title>
                 <Paragraph className="hero-paragraph">
-                  Por R$ 299,00/mes, o Vanttagem LGPD ajuda sua empresa a organizar governanca, inventarios, riscos, auditoria e
-                  documentos em um unico sistema. E quando fizer sentido evoluir, voce adiciona treinamento, portal, consultoria,
-                  DPO e diagnosticos no ritmo do seu negocio.
+                  Isso aumenta retrabalho, deixa riscos sem dono e enfraquece sua defesa em auditorias. Com o Vanttagem LGPD, sua
+                  empresa organiza governanca, inventario, risco, auditoria e documentos em um fluxo unico, com evidencias e
+                  prioridade clara. Comece pelo pacote basico e evolua no seu ritmo.
                 </Paragraph>
                 <Space wrap>
                   <Button
                     type="primary"
+                    className="cta-primary"
                     size="large"
                     href={whatsappLink('hero')}
                     target="_blank"
                     onClick={() => trackEvent('cta_click', 'hero')}
                   >
-                    Quero falar com especialista
+                    Falar no WhatsApp agora
                   </Button>
                   <Button
+                    className="cta-secondary"
                     size="large"
                     icon={<FileSearchOutlined />}
                     onClick={() => {
@@ -327,12 +330,9 @@ function App() {
                   >
                     Diagnóstico gratuito
                   </Button>
-                  <Button size="large" href="#planos" onClick={() => trackEvent('cta_click', 'hero_planos')}>
-                    Ver oferta
-                  </Button>
                 </Space>
                 <Text type="secondary">
-                  Arquitetura comercial enxuta: oferta principal clara, adicionais plugaveis e produtos de entrada para gerar demanda.
+                  Estrategia comercial objetiva: oferta principal clara, adicionais sob demanda e porta de entrada com diagnostico.
                 </Text>
               </Space>
             </Col>
@@ -383,8 +383,8 @@ function App() {
             <Col xs={24} lg={10}>
               <Title level={2}>Sem metodo, compliance vira retrabalho</Title>
               <Paragraph>
-                A maioria das empresas trava em planilhas, documentos dispersos e falta de priorizacao. Nosso modelo estrutura a
-                operacao de ponta a ponta com processo claro e uma trilha comercial mais facil de vender.
+                Quando os processos ficam dispersos, sua empresa perde prazo, repete tarefa e expoe a operacao a risco regulatorio.
+                O Vanttagem organiza a rotina ponta a ponta com dono, evidencias e criterio de prioridade.
               </Paragraph>
             </Col>
             <Col xs={24} lg={14}>
@@ -429,8 +429,8 @@ function App() {
         <section className="section-block">
           <Title level={2}>Depoimentos (demo ilustrativo)</Title>
           <Paragraph>
-            Estes depoimentos sao exemplos de comunicacao para a landing. Depois voce pode substituir por clientes reais com
-            autorizacao.
+            Estes depoimentos sao exemplos de narrativa comercial. Substitua por clientes reais com autorizacao para elevar prova
+            social da oferta.
           </Paragraph>
           <Row gutter={[16, 16]}>
             {testimonials.map((testimonial) => (
@@ -450,8 +450,8 @@ function App() {
         <section className="section-block section-soft" id="planos">
           <Title level={2}>Oferta principal e pacotes adicionais</Title>
           <Paragraph>
-            A decisao comercial precisa ser simples: vender o pacote basico primeiro e usar os adicionais para aumentar aderencia e
-            ticket.
+            A decisao comercial precisa ser simples: primeiro consolidar operacao com o pacote basico. Depois, ampliar escopo com
+            pacotes adicionais conforme necessidade.
           </Paragraph>
 
           <Row gutter={[16, 16]}>
@@ -474,19 +474,24 @@ function App() {
                   <Space wrap>
                     <Button
                       type="primary"
+                      className="cta-primary"
                       size="large"
                       href={whatsappLink('pacote_sistema_basico')}
                       target="_blank"
                       onClick={() => trackEvent('cta_click', 'pacote_sistema_basico')}
                     >
-                      Contratar pacote basico
+                      Falar sobre o pacote basico
                     </Button>
                     <Button
+                      className="cta-secondary"
                       size="large"
-                      href="#adicionais"
-                      onClick={() => trackEvent('cta_click', 'ver_adicionais')}
+                      icon={<FileSearchOutlined />}
+                      onClick={() => {
+                        trackEvent('cta_click', 'diagnostico_gratis_oferta');
+                        setPagina('diagnostico');
+                      }}
                     >
-                      Ver adicionais
+                      Fazer diagnostico gratuito
                     </Button>
                   </Space>
                 </Space>
@@ -495,23 +500,23 @@ function App() {
             <Col xs={24} lg={10}>
               <Card className="offer-card offer-card-secondary" bordered={false}>
                 <Space direction="vertical" size={18}>
-                  <Title level={4}>Como aumentar receita sem travar a venda</Title>
+                  <Title level={4}>Como evoluir sem travar a decisao de compra</Title>
                   <Paragraph>
-                    O sistema basico deve ser a resposta padrao. Os pacotes funcionais entram por contexto comercial e o
-                    licenciamento adicional entra conforme a equipe cresce.
+                    O sistema basico e a resposta padrao para iniciar. Pacotes funcionais entram por contexto da empresa e o
+                    licenciamento adicional cresce junto com a operacao.
                   </Paragraph>
                   <div className="offer-mini-grid">
                     <Card size="small" className="offer-mini-card">
-                      <Text strong>Upsell operacional</Text>
-                      <Paragraph>Treinamento, portal e expansao de usuarios.</Paragraph>
+                      <Text strong>Expansao operacional</Text>
+                      <Paragraph>Treinamento, portal e aumento de capacidade do time.</Paragraph>
                     </Card>
                     <Card size="small" className="offer-mini-card">
-                      <Text strong>Upsell consultivo</Text>
-                      <Paragraph>Consultoria, DPO e analise contratual quando a empresa exigir apoio mais proximo.</Paragraph>
+                      <Text strong>Apoio especializado</Text>
+                      <Paragraph>Consultoria, DPO e analise contratual para decisoes com maior risco.</Paragraph>
                     </Card>
                     <Card size="small" className="offer-mini-card">
                       <Text strong>Entrada digital</Text>
-                      <Paragraph>Diagnosticos na Hotmart para captacao e qualificacao comercial.</Paragraph>
+                      <Paragraph>Diagnosticos digitais para atrair, educar e qualificar novas oportunidades.</Paragraph>
                     </Card>
                   </div>
                 </Space>
@@ -524,8 +529,8 @@ function App() {
             Pacotes adicionais
           </Title>
           <Paragraph>
-            Estes pacotes ampliam capacidade funcional e valor percebido da operacao. O licenciamento adicional fica em uma camada
-            separada para manter a oferta clara.
+            Estes pacotes ampliam capacidade funcional depois da base estar implementada. O licenciamento adicional fica separado para
+            manter a proposta principal simples.
           </Paragraph>
           <Row gutter={[16, 16]}>
             {additionalPackages.map((addon) => (
@@ -537,11 +542,12 @@ function App() {
                   <Paragraph>{addon.details}</Paragraph>
                   <Button
                     type="default"
+                    className="cta-secondary"
                     href={whatsappLink(`adicional_${addon.title.toLowerCase().replaceAll(' ', '_')}`)}
                     target="_blank"
                     onClick={() => trackEvent('cta_click', `adicional_${addon.title}`)}
                   >
-                    Solicitar adicional
+                    Falar sobre este adicional
                   </Button>
                 </Card>
               </Col>
@@ -563,12 +569,13 @@ function App() {
                   <Paragraph className="price">{pack.value}</Paragraph>
                   <Paragraph>{pack.details}</Paragraph>
                   <Button
+                    className="cta-secondary"
                     block
                     href={whatsappLink(`licenciamento_${pack.title.toLowerCase().replaceAll(' ', '_')}`)}
                     target="_blank"
                     onClick={() => trackEvent('cta_click', `licenciamento_${pack.title}`)}
                   >
-                    Quero ampliar acessos
+                    Falar sobre licenciamento
                   </Button>
                 </Card>
               </Col>
@@ -584,10 +591,11 @@ function App() {
                 <Title level={4}>Diagnóstico LGPD Bronze</Title>
                 <Paragraph className="price">Gratuito</Paragraph>
                 <Paragraph>
-                  Responda o questionário e descubra o nível de maturidade LGPD da sua empresa em minutos.
+                  Responda o questionario e descubra em minutos o nivel de maturidade LGPD da sua empresa.
                 </Paragraph>
                 <Button
                   type="primary"
+                  className="cta-secondary"
                   block
                   icon={<FileSearchOutlined />}
                   onClick={() => {
@@ -607,12 +615,13 @@ function App() {
                   <Paragraph className="price">{product.value}</Paragraph>
                   <Paragraph>{product.details}</Paragraph>
                   <Button
+                    className="cta-secondary"
                     block
                     href={whatsappLink(`produto_${product.title.toLowerCase().replaceAll(' ', '_')}`)}
                     target="_blank"
                     onClick={() => trackEvent('cta_click', `produto_${product.title}`)}
                   >
-                    Quero saber mais
+                    Falar sobre o produto
                   </Button>
                 </Card>
               </Col>
@@ -626,13 +635,14 @@ function App() {
         </section>
 
         <section className="section-block cta-final">
-          <Title level={2}>Pronto para estruturar seu compliance LGPD?</Title>
+          <Title level={2}>Pronto para tirar a LGPD do improviso?</Title>
           <Paragraph>
-            Comece pelo pacote basico e adicione treinamento, portal, consultoria, DPO ou diagnosticos conforme o momento da empresa.
+            Fale com um especialista, valide seu cenario e implemente uma operacao LGPD com prioridades claras e trilha de evidencia.
           </Paragraph>
           <Space wrap>
             <Button
               type="primary"
+              className="cta-primary"
               size="large"
               href={whatsappLink('cta_final')}
               target="_blank"
@@ -640,8 +650,16 @@ function App() {
             >
               Falar no WhatsApp agora
             </Button>
-            <Button size="large" href="#modulos" onClick={() => trackEvent('cta_click', 'cta_final_modulos')}>
-              Revisar modulos
+            <Button
+              className="cta-secondary"
+              size="large"
+              icon={<FileSearchOutlined />}
+              onClick={() => {
+                trackEvent('cta_click', 'cta_final_diagnostico');
+                setPagina('diagnostico');
+              }}
+            >
+              Fazer diagnostico gratuito
             </Button>
           </Space>
         </section>

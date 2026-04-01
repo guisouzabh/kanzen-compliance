@@ -153,8 +153,8 @@ export default function DiagnosticoGratis({ onBack }: Props) {
       });
       setResultado(res);
       setStep('resultado');
-    } catch (e: any) {
-      setErro(e.message ?? 'Erro ao calcular resultado.');
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : 'Erro ao calcular resultado.');
     } finally {
       setLoading(false);
     }
@@ -206,7 +206,7 @@ export default function DiagnosticoGratis({ onBack }: Props) {
               </Title>
               <Paragraph style={{ fontSize: 16, color: '#555', maxWidth: 560, margin: '0 auto' }}>
                 Descubra em poucos minutos o nível de maturidade da sua empresa em relação à LGPD.
-                Responda as perguntas e receba um resultado detalhado por domínio — sem custo.
+                Responda as perguntas e receba um resultado detalhado por domínio para priorizar próximos passos, sem custo.
               </Paragraph>
             </div>
 

@@ -1,13 +1,20 @@
 const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? '';
 
+function getErrorMessage(body: unknown): string | null {
+  if (!body || typeof body !== 'object') return null;
+  if (!('erro' in body)) return null;
+  const maybeError = body.erro;
+  return typeof maybeError === 'string' && maybeError.trim() ? maybeError : null;
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...options
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error((body as any)?.erro ?? `Erro ${res.status}`);
+    const body: unknown = await res.json().catch(() => null);
+    throw new Error(getErrorMessage(body) ?? `Erro ${res.status}`);
   }
   return res.json() as Promise<T>;
 }
