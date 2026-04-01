@@ -45,18 +45,6 @@ async function validarClassificacao(tenantId: number, classificacaoId: number) {
   }
 }
 
-async function validarClassificacao(tenantId: number, classificacaoId: number) {
-  const rows = await tenantQuery<{ id: number }>(
-    tenantId,
-    'SELECT id FROM classificacoes WHERE tenant_id = ? AND id = ?',
-    [classificacaoId]
-  );
-
-  if (!rows.length) {
-    throw new AppError('Classificação inválida para este tenant', 400);
-  }
-}
-
 async function validarRequisitoBase(requisitoBaseId: number) {
   const [rows] = await pool.query('SELECT id FROM requisito_base WHERE id = ?', [requisitoBaseId]);
   if (!(rows as any[]).length) {

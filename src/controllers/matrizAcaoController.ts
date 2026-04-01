@@ -53,7 +53,7 @@ export async function criarMatrizAcao(req: AuthRequest, res: Response) {
   }
 
   const dados: MatrizAcaoInput = parseResult.data;
-  const novo = await criarMatrizAcaoService(dados, tenantId);
+  const novo = await criarMatrizAcaoService(dados as any, tenantId);
   return res.status(201).json(novo);
 }
 
@@ -68,7 +68,7 @@ export async function atualizarMatrizAcao(req: AuthRequest, res: Response) {
   }
 
   const dados: MatrizAcaoInput = parseResult.data;
-  const atualizado = await atualizarMatrizAcaoService(id, dados, tenantId);
+  const atualizado = await atualizarMatrizAcaoService(id, dados as any, tenantId);
   if (!atualizado) throw new AppError('ID inválido', 404);
   return res.json(atualizado);
 }

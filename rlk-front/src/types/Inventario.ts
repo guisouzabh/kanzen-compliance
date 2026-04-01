@@ -22,4 +22,8 @@ export interface InventarioDado {
 export interface ProcessoLista {
   id: number;
   nome: string;
+  descricao?: string | null;
+  parent_id?: number | null;
+  created_at?: string;
+  children?: ProcessoLista[];
 }

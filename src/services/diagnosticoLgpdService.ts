@@ -986,8 +986,8 @@ export async function criarDiagnosticoAcoesService(
         empresa_id: execucao.empresa_id,
         acao: acaoTexto,
         objetivo: item.objetivo ?? null,
-        prioridade: item.prioridade ?? 3,
-        esforco: item.esforco ?? 3,
+        prioridade: (item.prioridade ?? 3) as MatrizAcao['prioridade'],
+        esforco: (item.esforco ?? 3) as MatrizAcao['esforco'],
         origem: `Diagnóstico - ${execucao.modelo_nome ?? 'Modelo'}${
           item.macro_dominio ? ` - ${item.macro_dominio}` : ''
         }`,

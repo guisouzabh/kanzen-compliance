@@ -7,9 +7,6 @@ import {
   criarRequisito,
   deletarRequisito,
   listarCheckins,
-  listarTarefas,
-  criarTarefa,
-  atualizarTarefa,
   listarRequisitos,
   obterRequisito
 } from '../controllers/requisitoController';

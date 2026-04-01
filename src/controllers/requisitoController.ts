@@ -44,7 +44,7 @@ export async function criarRequisito(req: AuthRequest, res: Response) {
   }
 
   const dados: RequisitoInput = parseResult.data;
-  const novo = await criarRequisitoService(dados, tenantId);
+  const novo = await criarRequisitoService(dados as any, tenantId);
   return res.status(201).json(novo);
 }
 
@@ -95,7 +95,7 @@ export async function atualizarRequisito(req: AuthRequest, res: Response) {
   }
 
   const dados: RequisitoInput = parseResult.data;
-  const atualizado = await atualizarRequisitoService(requisitoId, dados, tenantId);
+  const atualizado = await atualizarRequisitoService(requisitoId, dados as any, tenantId);
 
   if (!atualizado) {
     throw new AppError('Requisito não encontrado', 404);

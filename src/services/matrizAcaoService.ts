@@ -7,6 +7,7 @@ const TAG_ENTITY_MATRIZ_ACAO = 'MATRIZ_ACAO';
 
 interface MatrizAcaoFilters {
   empresaId?: number;
+  planoId?: number;
   origemTyp?: string;
   origemId?: number;
   status?: string;
@@ -45,6 +46,10 @@ export async function listarMatrizAcoesService(
   if (filters.empresaId) {
     conditions.push('a.empresa_id = ?');
     params.push(filters.empresaId);
+  }
+  if (filters.planoId) {
+    conditions.push('a.plano_id = ?');
+    params.push(filters.planoId);
   }
   if (filters.origemTyp) {
     conditions.push('a.origem_typ = ?');
@@ -162,6 +167,7 @@ export async function criarMatrizAcaoService(
       INSERT INTO matriz_acoes (
         tenant_id,
         empresa_id,
+        plano_id,
         acao,
         objetivo,
         status,
@@ -174,10 +180,11 @@ export async function criarMatrizAcaoService(
         origem_id,
         responsavel_id
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       acaoSemTags.empresa_id,
+      acaoSemTags.plano_id ?? null,
       acaoSemTags.acao,
       acaoSemTags.objetivo ?? null,
       status,
@@ -231,6 +238,7 @@ export async function atualizarMatrizAcaoService(
       UPDATE matriz_acoes
          SET tenant_id = ?,
              empresa_id = ?,
+             plano_id = ?,
              acao = ?,
              objetivo = ?,
              status = ?,
@@ -246,6 +254,7 @@ export async function atualizarMatrizAcaoService(
     `,
     [
       acaoSemTags.empresa_id,
+      acaoSemTags.plano_id ?? null,
       acaoSemTags.acao,
       acaoSemTags.objetivo ?? null,
       status,

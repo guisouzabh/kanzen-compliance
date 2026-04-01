@@ -25,10 +25,16 @@ import statusLgpdRoutes from './routes/statusLgpdRoutes';
 import empresaDadosStatusRoutes from './routes/empresaDadosStatusRoutes';
 import diagnosticoLgpdRoutes from './routes/diagnosticoLgpdRoutes';
 import matrizAcaoRoutes from './routes/matrizAcaoRoutes';
+import planoRoutes from './routes/planoRoutes';
 import comiteRoutes from './routes/comiteRoutes';
 import baseLegalRoutes from './routes/baseLegalRoutes';
 import privacyCaseRoutes from './routes/privacyCaseRoutes';
 import cnaeRoutes from './routes/cnaeRoutes';
+import diagnosticoPublicoRoutes from './routes/diagnosticoPublicoRoutes';
+import treinamentoPublicoRoutes from './routes/treinamentoPublicoRoutes';
+import avaliacaoRiscoRoutes from './routes/avaliacaoRiscoRoutes';
+import treinamentoLgpdRoutes from './routes/treinamentoLgpdRoutes';
+import colaboradorRoutes from './routes/colaboradorRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -40,8 +46,10 @@ app.use(morgan('dev'));
 app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 app.use('/arquivos-s3', express.static(path.resolve(__dirname, '..', 'arquivos-s3')));
 
-// Rotas públicas (auth)
+// Rotas públicas (sem autenticação)
 app.use('/api/v1', authRoutes);
+app.use('/api/v1', diagnosticoPublicoRoutes);
+app.use('/api/v1', treinamentoPublicoRoutes);
 
 // Rotas protegidas (empresas)
 app.use('/api/v1', empresaRoutes);
@@ -64,10 +72,14 @@ app.use('/api/v1', statusLgpdRoutes);
 app.use('/api/v1', empresaDadosStatusRoutes);
 app.use('/api/v1', diagnosticoLgpdRoutes);
 app.use('/api/v1', matrizAcaoRoutes);
+app.use('/api/v1', planoRoutes);
 app.use('/api/v1', comiteRoutes);
 app.use('/api/v1', baseLegalRoutes);
 app.use('/api/v1', privacyCaseRoutes);
 app.use('/api/v1', cnaeRoutes);
+app.use('/api/v1', avaliacaoRiscoRoutes);
+app.use('/api/v1', treinamentoLgpdRoutes);
+app.use('/api/v1', colaboradorRoutes);
 
 app.get('/', (req, res) => {
   res.send('API RLK rodando com backend pro + auth.');

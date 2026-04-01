@@ -11,6 +11,7 @@ export interface MatrizAcao {
   tenant_id?: number;
   empresa_id: number;
   empresa_nome?: string;
+  plano_id?: number | null;
   acao: string;
   objetivo?: string | null;
   status?: MatrizAcaoStatus;

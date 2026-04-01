@@ -24,7 +24,8 @@ const NAVIGATION_MODULES: NavigationModule[] = [
     items: [
       { key: 'empresa-dados', label: 'Dados da Empresa', path: '/empresas' },
       { key: 'empresa-usuarios', label: 'Usuarios da Empresa', path: '/usuarios' },
-      { key: 'empresa-hierarquia', label: 'Hierarquia', path: '/hierarquia' }
+      { key: 'empresa-hierarquia', label: 'Hierarquia', path: '/hierarquia' },
+      { key: 'empresa-colaboradores', label: 'Colaboradores', path: '/colaboradores' }
     ]
   },
   {
@@ -66,12 +67,16 @@ const NAVIGATION_MODULES: NavigationModule[] = [
   {
     key: 'riscos',
     label: 'Riscos',
-    items: [{ key: 'riscos-painel', label: 'Matriz e Painel de Riscos', path: '/riscos' }]
+    items: [{ key: 'riscos-avaliacao', label: 'Avaliação de Risco LGPD', path: '/riscos' }]
   },
   {
     key: 'capacitacao',
     label: 'Capacitacao',
-    items: [{ key: 'capacitacao-programas', label: 'Programas e Evidencias', path: '/capacitacao' }]
+    items: [
+      { key: 'capacitacao-programas', label: 'Programas de Treinamento', path: '/capacitacao' },
+      { key: 'capacitacao-detalhe', label: 'Detalhe Treinamento', path: '/capacitacao/:id', hiddenInMenu: true },
+      { key: 'capacitacao-turma', label: 'Detalhe Turma', path: '/capacitacao/turmas/:turmaId', hiddenInMenu: true }
+    ]
   },
   {
     key: 'auditoria',

@@ -29,8 +29,14 @@ import MatrizAcoes from './pages/MatrizAcoes';
 import MatrizAcoesKanban from './pages/MatrizAcoesKanban';
 import MeuPerfil from './pages/MeuPerfil';
 import ModuloPlaceholder from './pages/ModuloPlaceholder';
+import AvaliacaoRisco from './pages/AvaliacaoRisco';
 import Comites from './pages/Comites';
 import Dpo from './pages/Dpo';
+import Capacitacao from './pages/Capacitacao';
+import TreinamentoDetalhe from './pages/TreinamentoDetalhe';
+import TurmaDetalhe from './pages/TurmaDetalhe';
+import Colaboradores from './pages/Colaboradores';
+import TreinamentoPublico from './pages/TreinamentoPublico';
 import { EmpresaProvider } from './contexts/EmpresaContext';
 import MainLayout from './layouts/MainLayout';
 import RequireAuth from './components/RequireAuth';
@@ -65,6 +71,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Routes>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<Login />} />
+
+              {/* Rotas públicas do treinamento — sem layout do sistema */}
+              <Route path="/t/magic/:token" element={<TreinamentoPublico />} />
+              <Route path="/t/:slug" element={<TreinamentoPublico />} />
 
               <Route element={<RequireAuth />}>
                 <Route element={<MainLayout />}>
@@ -104,11 +114,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="/painel-maturidade-sancoes" element={<PainelMaturidadeSancoes />} />
                   <Route path="/solicitacoes-titular" element={<SolicitacoesTitular />} />
 
-                  <Route path="/riscos" element={<ModuloPlaceholder title="Riscos" description="Modulo em construcao." />} />
-                  <Route
-                    path="/capacitacao"
-                    element={<ModuloPlaceholder title="Capacitacao" description="Modulo em construcao." />}
-                  />
+                  <Route path="/riscos" element={<AvaliacaoRisco />} />
+                  <Route path="/capacitacao" element={<Capacitacao />} />
+                  <Route path="/capacitacao/:id" element={<TreinamentoDetalhe />} />
+                  <Route path="/capacitacao/turmas/:turmaId" element={<TurmaDetalhe />} />
+                  <Route path="/colaboradores" element={<Colaboradores />} />
                   <Route
                     path="/auditoria"
                     element={<ModuloPlaceholder title="Auditoria" description="Modulo em construcao." />}

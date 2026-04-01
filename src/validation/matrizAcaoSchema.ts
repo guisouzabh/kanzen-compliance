@@ -22,6 +22,7 @@ export const matrizAcaoSchema = z
     origem_typ: z.string().max(50, 'origem_typ muito longo').optional().nullable(),
     origem_id: z.number().int().positive().optional().nullable(),
     responsavel_id: z.number().int().positive().optional().nullable(),
+    plano_id: z.number().int().positive().optional().nullable(),
     tags: z.array(z.string().min(1)).max(50).optional()
   })
   .refine((dados) => !dados.origem_id || !!dados.origem_typ, {

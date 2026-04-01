@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import {
   AuditOutlined,
   CheckCircleFilled,
   FileProtectOutlined,
+  FileSearchOutlined,
   FileTextOutlined,
   GlobalOutlined,
   MessageOutlined,
@@ -10,6 +12,7 @@ import {
   TeamOutlined,
   WarningOutlined
 } from '@ant-design/icons';
+import DiagnosticoGratis from './pages/DiagnosticoGratis';
 import {
   Badge,
   Button,
@@ -264,6 +267,12 @@ function whatsappLink(section: string) {
 }
 
 function App() {
+  const [pagina, setPagina] = useState<'landing' | 'diagnostico'>('landing');
+
+  if (pagina === 'diagnostico') {
+    return <DiagnosticoGratis onBack={() => setPagina('landing')} />;
+  }
+
   return (
     <Layout className="landing-layout">
       <Header className="landing-header">
@@ -307,6 +316,16 @@ function App() {
                     onClick={() => trackEvent('cta_click', 'hero')}
                   >
                     Quero falar com especialista
+                  </Button>
+                  <Button
+                    size="large"
+                    icon={<FileSearchOutlined />}
+                    onClick={() => {
+                      trackEvent('cta_click', 'diagnostico_gratis_hero');
+                      setPagina('diagnostico');
+                    }}
+                  >
+                    Diagnóstico gratuito
                   </Button>
                   <Button size="large" href="#planos" onClick={() => trackEvent('cta_click', 'hero_planos')}>
                     Ver oferta
@@ -559,7 +578,28 @@ function App() {
           <Divider />
           <Title level={3}>Diagnosticos digitais e produtos de entrada</Title>
           <Row gutter={[16, 16]}>
-            {hotmartProducts.map((product) => (
+            <Col xs={24} md={12} lg={8}>
+              <Card className="pricing-card offer-card-primary" bordered={false}>
+                <Tag color="green">Grátis agora</Tag>
+                <Title level={4}>Diagnóstico LGPD Bronze</Title>
+                <Paragraph className="price">Gratuito</Paragraph>
+                <Paragraph>
+                  Responda o questionário e descubra o nível de maturidade LGPD da sua empresa em minutos.
+                </Paragraph>
+                <Button
+                  type="primary"
+                  block
+                  icon={<FileSearchOutlined />}
+                  onClick={() => {
+                    trackEvent('cta_click', 'diagnostico_gratis_planos');
+                    setPagina('diagnostico');
+                  }}
+                >
+                  Fazer diagnóstico grátis
+                </Button>
+              </Card>
+            </Col>
+            {hotmartProducts.filter((p) => p.title !== 'Diagnostico LGPD Bronze').map((product) => (
               <Col xs={24} md={12} lg={8} key={product.title}>
                 <Card className="pricing-card" bordered={false}>
                   <Tag color={product.tag === 'Entrada' ? 'blue' : 'default'}>{product.tag}</Tag>

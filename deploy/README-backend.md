@@ -47,6 +47,7 @@ cd ~/apps/vanttagem.com.br
 
 Esse script faz:
 
+- derruba a stack antiga da landing para liberar as portas `80/443`
 - garante a rede Docker compartilhada `vanttagem_shared`
 - reconcilia o container do banco nessa rede
 - espera o MariaDB ficar saudavel

@@ -5,13 +5,13 @@ export const areaSchema = z.object({
   descricao: z.string().max(500, 'Descrição muito longa').optional().nullable(),
   unidade_id: z.number().int().positive({ message: 'Unidade é obrigatória' }),
   latitude: z
-    .number({ coerce: true })
+    .coerce.number()
     .min(-90, 'Latitude inválida')
     .max(90, 'Latitude inválida')
     .nullable()
     .optional(),
   longitude: z
-    .number({ coerce: true })
+    .coerce.number()
     .min(-180, 'Longitude inválida')
     .max(180, 'Longitude inválida')
     .nullable()

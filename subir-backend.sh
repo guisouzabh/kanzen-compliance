@@ -6,6 +6,8 @@ DB_ENV_FILE="$ROOT_DIR/deploy/.env.db"
 DB_COMPOSE_FILE="$ROOT_DIR/deploy/docker-compose.db.yml"
 BACKEND_ENV_FILE="$ROOT_DIR/deploy/.env.backend"
 BACKEND_COMPOSE_FILE="$ROOT_DIR/deploy/docker-compose.backend.yml"
+LANDING_ENV_FILE="$ROOT_DIR/deploy/.env.landing"
+LANDING_COMPOSE_FILE="$ROOT_DIR/deploy/docker-compose.landing.yml"
 
 log() {
   printf '\n[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1"
@@ -24,6 +26,10 @@ backend_compose() {
   docker compose --env-file "$BACKEND_ENV_FILE" -f "$BACKEND_COMPOSE_FILE" "$@"
 }
 
+landing_compose() {
+  docker compose --env-file "$LANDING_ENV_FILE" -f "$LANDING_COMPOSE_FILE" "$@"
+}
+
 command -v docker >/dev/null 2>&1 || fail "docker nao encontrado"
 [[ -f "$DB_ENV_FILE" ]] || fail "Arquivo $DB_ENV_FILE nao encontrado"
 [[ -f "$DB_COMPOSE_FILE" ]] || fail "Arquivo $DB_COMPOSE_FILE nao encontrado"
@@ -32,6 +38,11 @@ command -v docker >/dev/null 2>&1 || fail "docker nao encontrado"
 
 log "Garantindo rede Docker compartilhada"
 docker network inspect vanttagem_shared >/dev/null 2>&1 || docker network create vanttagem_shared >/dev/null
+
+if [[ -f "$LANDING_ENV_FILE" && -f "$LANDING_COMPOSE_FILE" ]]; then
+  log "Desativando a stack legada da landing para liberar as portas 80/443"
+  landing_compose down || true
+fi
 
 log "Reconciliando o container do banco na rede compartilhada"
 db_compose up -d db
