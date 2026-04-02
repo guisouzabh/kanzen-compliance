@@ -8,7 +8,14 @@ www.vanttagem.com.br {
 
 vanttagem.com.br {
   encode gzip zstd
-  reverse_proxy landing:80
+  @api path /api/* /healthz /uploads/* /arquivos-s3/*
+  handle @api {
+    reverse_proxy api:3000
+  }
+
+  handle {
+    reverse_proxy landing:80
+  }
 }
 
 app.vanttagem.com.br {
