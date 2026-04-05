@@ -1,0 +1,107 @@
+{
+  "info": {
+    "name": "Diagnostico Publico - Landing",
+    "description": "Colecao para testar os endpoints publicos do diagnostico LGPD usados na landing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://vanttagem.com.br/api/v1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Diagnostico Publico",
+      "item": [
+        {
+          "name": "Listar perguntas publicas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta eh array', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(Array.isArray(body)).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test('Array nao vazio', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/public/diagnostico/perguntas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "public",
+                "diagnostico",
+                "perguntas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Calcular resultado publico (ajustar IDs)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Retorna nota_geral', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('nota_geral');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lead\": {\n    \"nome\": \"Lead Teste\",\n    \"email\": \"lead.teste@exemplo.com\",\n    \"empresa\": \"Empresa Teste\",\n    \"estado\": \"SP\"\n  },\n  \"respostas\": [\n    { \"pergunta_id\": 1, \"opcao\": 2 },\n    { \"pergunta_id\": 2, \"opcao\": 1 },\n    { \"pergunta_id\": 3, \"opcao\": 3 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/public/diagnostico/calcular",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "public",
+                "diagnostico",
+                "calcular"
+              ]
+            },
+            "description": "Use os pergunta_id reais retornados no request anterior. O endpoint exige respostas para todas as perguntas ativas."
+          }
+        }
+      ]
+    }
+  ]
+}

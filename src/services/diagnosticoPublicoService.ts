@@ -1,8 +1,8 @@
 import { tenantQuery, tenantExecute } from '../db/tenantDb';
 import { AppError } from '../errors/AppError';
 
-const TENANT_ID = 1;
-const MODELO_ID = 1;
+const TENANT_ID = 4;
+const MODELO_ID = 6;
 
 type RespostaItem = {
   pergunta_id: number;
