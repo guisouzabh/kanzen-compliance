@@ -41,8 +41,11 @@ docker network inspect vanttagem_shared >/dev/null 2>&1 || docker network create
 
 if [[ -f "$LANDING_ENV_FILE" && -f "$LANDING_COMPOSE_FILE" ]]; then
   log "Desativando a stack legada da landing para liberar as portas 80/443"
-  landing_compose down || true
+  landing_compose down --remove-orphans || true
 fi
+
+log "Desativando a stack atual do backend para reconciliar containers orfaos"
+backend_compose down --remove-orphans || true
 
 log "Reconciliando o container do banco na rede compartilhada"
 db_compose up -d db
@@ -51,6 +54,7 @@ log "Aguardando o banco ficar saudavel"
 set -a
 source "$DB_ENV_FILE"
 set +a
+READY=0
 for _ in $(seq 1 30); do
   if db_compose exec -T db mariadb-admin ping -h 127.0.0.1 -uroot "-p$MYSQL_ROOT_PASSWORD" --silent >/dev/null 2>&1; then
     READY=1
@@ -61,7 +65,7 @@ done
 [[ "${READY:-0}" == "1" ]] || fail "MariaDB nao ficou saudavel a tempo"
 
 log "Subindo landing + backend no mesmo edge"
-backend_compose up -d --build
+backend_compose up -d --build --remove-orphans
 
 log "Status da stack"
 backend_compose ps
