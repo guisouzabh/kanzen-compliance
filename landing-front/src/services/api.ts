@@ -1,4 +1,15 @@
-const BASE_URL = (import.meta.env.VITE_API_URL as string) ?? '';
+function defaultBaseUrl(): string {
+  if (typeof window === 'undefined') return '';
+
+  const { hostname } = window.location;
+  if (hostname === 'vanttagem.com.br' || hostname === 'www.vanttagem.com.br') {
+    return 'https://app.vanttagem.com.br';
+  }
+
+  return '';
+}
+
+const BASE_URL = ((import.meta.env.VITE_API_URL as string) ?? '').trim() || defaultBaseUrl();
 
 function getErrorMessage(body: unknown): string | null {
   if (!body || typeof body !== 'object') return null;

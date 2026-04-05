@@ -20,6 +20,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_WHATSAPP_NUMBER: ${VITE_WHATSAPP_NUMBER}
+        VITE_API_URL: ${VITE_API_URL}
     restart: unless-stopped
 
 volumes:

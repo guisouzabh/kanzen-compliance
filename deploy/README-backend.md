@@ -23,6 +23,7 @@ Preencha `deploy/.env.backend` com:
 
 - `ACME_EMAIL`
 - `VITE_WHATSAPP_NUMBER`
+- `VITE_API_URL`
 - `DB_PASSWORD`
 - `JWT_SECRET`
 - `ONLYOFFICE_JWT_SECRET`
@@ -35,6 +36,7 @@ openssl rand -base64 48
 ```
 
 Regra de arquiteto: o `DB_PASSWORD` aqui precisa ser exatamente o mesmo do `MYSQL_PASSWORD` em `deploy/.env.db`, porque a API vai autenticar no banco com o usuario `vanttagem_app`.
+Para a landing, fixe `VITE_API_URL=https://app.vanttagem.com.br` e pare de depender do proxy do dominio principal para o diagnostico.
 
 ## 2. Subir o backend
 
