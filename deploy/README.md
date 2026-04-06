@@ -112,8 +112,9 @@ Arquitetura proposta da fase 2:
 
 - `vanttagem.com.br`: landing page
 - `www.vanttagem.com.br`: redireciona para o dominio raiz
-- `app.vanttagem.com.br`: sistema web
-- `app.vanttagem.com.br/api/v1`: backend
+- `sistema.vanttagem.com.br`: sistema web
+- `sistema.vanttagem.com.br/api/v1`: backend principal
+- `app.vanttagem.com.br`: endpoint legado da API, se voce quiser manter compatibilidade
 - `db`: MariaDB interno na rede Docker, sem exposicao publica
 - `caddy`: reverse proxy com TLS automatico
 
@@ -123,9 +124,10 @@ Crie os registros A:
 
 - `@` -> `109.123.250.98`
 - `www` -> `109.123.250.98`
+- `sistema` -> `109.123.250.98`
 - `app` -> `109.123.250.98`
 
-Dica de arquitetura: manter app e API no mesmo host publico reduz CORS, simplifica certificados e corta uma classe inteira de bugs de browser.
+Dica de arquitetura: manter sistema web e API no mesmo host publico reduz CORS, simplifica certificados e corta uma classe inteira de bugs de browser.
 
 ### Preparar o arquivo de ambiente
 
@@ -140,6 +142,7 @@ Preencha principalmente:
 - `ACME_EMAIL`
 - `MYSQL_*`
 - `DB_*`
+- `FRONTEND_URL`
 - `JWT_SECRET`
 - `OPENAI_API_KEY` se o diagnostico com IA estiver habilitado
 - `VITE_MAPBOX_TOKEN` se o mapa for usado em producao
@@ -164,7 +167,8 @@ Teste estes endpoints:
 curl -I http://vanttagem.com.br
 curl -I https://vanttagem.com.br
 curl -I https://www.vanttagem.com.br
-curl -I https://app.vanttagem.com.br
+curl -I https://sistema.vanttagem.com.br
+curl https://sistema.vanttagem.com.br/healthz
 curl https://app.vanttagem.com.br/healthz
 ```
 

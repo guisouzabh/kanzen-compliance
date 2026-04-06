@@ -22,3 +22,16 @@ app.vanttagem.com.br {
   encode gzip zstd
   reverse_proxy api:3000
 }
+
+sistema.vanttagem.com.br {
+  encode gzip zstd
+
+  @api path /api/* /healthz /uploads/* /arquivos-s3/*
+  handle @api {
+    reverse_proxy api:3000
+  }
+
+  handle {
+    reverse_proxy frontend:80
+  }
+}

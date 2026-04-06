@@ -351,7 +351,7 @@ export async function enviarMagicLinks(req: AuthRequest, res: Response) {
   const tenantId = req.usuario!.tenantId;
   const turmaId = Number(req.params.turmaId);
   if (Number.isNaN(turmaId)) throw new AppError('ID inválido', 400);
-  const baseUrl = process.env.FRONTEND_URL ?? 'https://app.vanttagem.com.br';
+  const baseUrl = process.env.FRONTEND_URL ?? 'https://sistema.vanttagem.com.br';
   const total = await enviarMagicLinksService(turmaId, tenantId, baseUrl);
   return res.json({ enfileirados: total });
 }

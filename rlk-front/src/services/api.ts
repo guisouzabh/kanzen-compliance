@@ -1,8 +1,10 @@
 // src/services/api.ts
 import axios from 'axios';
 
+const baseURL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() || '/api/v1';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
+  baseURL
 });
 
 // Interceptor para enviar o token automaticamente (vamos usar depois)
