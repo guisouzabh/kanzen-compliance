@@ -3,8 +3,7 @@
 Objetivo desta etapa:
 
 - manter a landing em `vanttagem.com.br`
-- publicar o sistema web em `sistema.vanttagem.com.br`
-- manter `app.vanttagem.com.br` como host legado da API, se necessario
+- publicar o sistema web em `app.vanttagem.com.br`
 - reaproveitar o MariaDB ja criado
 - evoluir a stack atual sem criar um segundo proxy na porta `80/443`
 
@@ -39,8 +38,8 @@ openssl rand -base64 48
 ```
 
 Regra de arquiteto: o `DB_PASSWORD` aqui precisa ser exatamente o mesmo do `MYSQL_PASSWORD` em `deploy/.env.db`, porque a API vai autenticar no banco com o usuario `vanttagem_app`.
-Para a landing, fixe `VITE_API_URL=https://app.vanttagem.com.br` durante a transicao ou aponte para `https://sistema.vanttagem.com.br` quando quiser consolidar tudo na mesma borda.
-Para o sistema web, use `VITE_API_BASE_URL=/api/v1` e `FRONTEND_URL=https://sistema.vanttagem.com.br`.
+Para a landing, fixe `VITE_API_URL=https://app.vanttagem.com.br` e pare de depender do proxy do dominio principal para o diagnostico.
+Para o sistema web, use `VITE_API_BASE_URL=/api/v1` e `FRONTEND_URL=https://app.vanttagem.com.br`.
 
 ## 2. Subir o backend
 
@@ -76,19 +75,17 @@ Teste:
 
 ```bash
 curl -I https://vanttagem.com.br
-curl -I https://sistema.vanttagem.com.br
-curl https://sistema.vanttagem.com.br/healthz
+curl -I https://app.vanttagem.com.br
 curl https://app.vanttagem.com.br/healthz
 ```
 
 Resultados esperados:
 
 - `vanttagem.com.br` continua servindo a landing
-- `sistema.vanttagem.com.br` serve o frontend React
-- `sistema.vanttagem.com.br/healthz` retorna `{"status":"ok"}`
-- `app.vanttagem.com.br/healthz` continua disponivel como endpoint legado de API
+- `app.vanttagem.com.br` serve o frontend React
+- `app.vanttagem.com.br/healthz` retorna `{"status":"ok"}`
 
 ## 5. Observacoes importantes
 
 - O backend continua em modo operacional por `ts-node/register/transpile-only`, porque o projeto ainda nao fecha em `tsc` estrito.
-- O sistema agora entra na mesma borda da landing, mas isolado por hostname. Isso preserva um unico ingress e reduz conflitos operacionais.
+- O sistema entra na mesma borda da landing, mas isolado por hostname. Isso preserva um unico ingress e reduz conflitos operacionais.

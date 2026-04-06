@@ -112,9 +112,8 @@ Arquitetura proposta da fase 2:
 
 - `vanttagem.com.br`: landing page
 - `www.vanttagem.com.br`: redireciona para o dominio raiz
-- `sistema.vanttagem.com.br`: sistema web
-- `sistema.vanttagem.com.br/api/v1`: backend principal
-- `app.vanttagem.com.br`: endpoint legado da API, se voce quiser manter compatibilidade
+- `app.vanttagem.com.br`: sistema web
+- `app.vanttagem.com.br/api/v1`: backend principal
 - `db`: MariaDB interno na rede Docker, sem exposicao publica
 - `caddy`: reverse proxy com TLS automatico
 
@@ -124,7 +123,6 @@ Crie os registros A:
 
 - `@` -> `109.123.250.98`
 - `www` -> `109.123.250.98`
-- `sistema` -> `109.123.250.98`
 - `app` -> `109.123.250.98`
 
 Dica de arquitetura: manter sistema web e API no mesmo host publico reduz CORS, simplifica certificados e corta uma classe inteira de bugs de browser.
@@ -167,8 +165,7 @@ Teste estes endpoints:
 curl -I http://vanttagem.com.br
 curl -I https://vanttagem.com.br
 curl -I https://www.vanttagem.com.br
-curl -I https://sistema.vanttagem.com.br
-curl https://sistema.vanttagem.com.br/healthz
+curl -I https://app.vanttagem.com.br
 curl https://app.vanttagem.com.br/healthz
 ```
 

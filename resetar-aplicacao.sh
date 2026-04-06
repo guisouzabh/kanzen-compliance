@@ -120,7 +120,7 @@ for _ in $(seq 1 30); do
 done
 [[ "$READY" == "1" ]] || fail "MariaDB nao ficou saudavel a tempo"
 
-log "Subindo a stack limpa de landing + sistema + backend"
+log "Subindo a stack limpa de landing + app + backend"
 backend_compose up -d --build --remove-orphans
 
 log "Status final da stack"
@@ -128,6 +128,6 @@ backend_compose ps
 
 printf '\nValidacoes sugeridas:\n'
 printf 'curl -I https://vanttagem.com.br\n'
-printf 'curl -I https://sistema.vanttagem.com.br\n'
-printf 'curl -I https://sistema.vanttagem.com.br/healthz\n'
+printf 'curl -I https://app.vanttagem.com.br\n'
+printf 'curl -I https://app.vanttagem.com.br/healthz\n'
 printf 'curl https://vanttagem.com.br/api/v1/public/diagnostico/perguntas\n'

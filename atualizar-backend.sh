@@ -23,7 +23,7 @@ CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 log "Atualizando codigo da branch $CURRENT_BRANCH"
 git pull --ff-only
 
-log "Rebuildando a stack de landing + sistema + backend"
+log "Rebuildando a stack de landing + app + backend"
 "$ROOT_DIR/subir-backend.sh"
 
 log "Backend atualizado com sucesso"

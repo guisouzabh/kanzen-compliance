@@ -64,7 +64,7 @@ for _ in $(seq 1 30); do
 done
 [[ "${READY:-0}" == "1" ]] || fail "MariaDB nao ficou saudavel a tempo"
 
-log "Subindo landing + sistema + backend no mesmo edge"
+log "Subindo landing + app + backend no mesmo edge"
 backend_compose up -d --build --remove-orphans
 
 log "Status da stack"
@@ -72,6 +72,5 @@ backend_compose ps
 
 printf '\nValidacoes:\n'
 printf 'Landing: https://vanttagem.com.br\n'
-printf 'API legacy: https://app.vanttagem.com.br\n'
-printf 'Sistema: https://sistema.vanttagem.com.br\n'
-printf 'Healthcheck: https://sistema.vanttagem.com.br/healthz\n'
+printf 'Sistema: https://app.vanttagem.com.br\n'
+printf 'Healthcheck: https://app.vanttagem.com.br/healthz\n'
