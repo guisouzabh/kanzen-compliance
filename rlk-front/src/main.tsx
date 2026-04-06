@@ -27,6 +27,8 @@ import DiagnosticoLgpd from './pages/DiagnosticoLgpd';
 import NovoRequisito from './pages/NovoRequisito';
 import MatrizAcoes from './pages/MatrizAcoes';
 import MatrizAcoesKanban from './pages/MatrizAcoesKanban';
+import PlanosAcoes from './pages/PlanosAcoes';
+import PlanoAcoesDetalhe from './pages/PlanoAcoesDetalhe';
 import MeuPerfil from './pages/MeuPerfil';
 import ModuloPlaceholder from './pages/ModuloPlaceholder';
 import AvaliacaoRisco from './pages/AvaliacaoRisco';
@@ -103,6 +105,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="/processos" element={<Processos />} />
                   <Route path="/lgpd-mapa" element={<LgpdMapa />} />
 
+                  <Route path="/planos-acoes" element={<PlanosAcoes />} />
+                  <Route path="/planos-acoes/:id" element={<PlanoAcoesDetalhe />} />
                   <Route path="/matriz-acoes" element={<MatrizAcoes />} />
                   <Route path="/matriz-acoes-kanban" element={<MatrizAcoesKanban />} />
 

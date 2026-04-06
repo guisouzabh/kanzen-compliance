@@ -171,6 +171,30 @@ export async function deletarPlanoService(
   id: number,
   tenantId: number
 ): Promise<boolean> {
+  const planos = await tenantQuery<{ id: number; tipo: string }>(
+    tenantId,
+    'SELECT id, tipo FROM planos WHERE tenant_id = ? AND id = ?',
+    [id]
+  );
+
+  const plano = planos[0];
+  if (!plano) return false;
+
+  if (plano.tipo === 'ACOES') {
+    const vinculadas = await tenantQuery<{ total: number }>(
+      tenantId,
+      'SELECT COUNT(*) AS total FROM matriz_acoes WHERE tenant_id = ? AND plano_id = ?',
+      [id]
+    );
+    const totalAcoes = Number(vinculadas[0]?.total || 0);
+    if (totalAcoes > 0) {
+      throw new AppError(
+        'Não é possível excluir o plano: existem ações vinculadas. Remova as ações primeiro.',
+        409
+      );
+    }
+  }
+
   const result = await tenantExecute(
     tenantId,
     'DELETE FROM planos WHERE tenant_id = ? AND id = ?',

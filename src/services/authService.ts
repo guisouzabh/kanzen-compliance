@@ -108,7 +108,26 @@ export async function loginService(
   const usuario = usuarios[0];
   const role = normalizeUserRole(usuario.role) ?? 'COLABORADOR';
 
-  const senhaOk = await bcrypt.compare(senha, usuario.senha_hash);
+  if (typeof usuario.senha_hash !== 'string' || !usuario.senha_hash.trim()) {
+    console.warn('Usuario com senha_hash ausente ou invalido ao autenticar', {
+      email,
+      usuarioId: usuario.id
+    });
+    throw new AppError('Credenciais inválidas', 401);
+  }
+
+  let senhaOk = false;
+  try {
+    senhaOk = await bcrypt.compare(senha, usuario.senha_hash);
+  } catch (error) {
+    console.warn('Falha ao comparar senha do usuario', {
+      email,
+      usuarioId: usuario.id,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    throw new AppError('Credenciais inválidas', 401);
+  }
+
   if (!senhaOk) {
     throw new AppError('Credenciais inválidas', 401);
   }

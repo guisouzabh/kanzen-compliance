@@ -52,6 +52,7 @@ const NAVIGATION_MODULES: NavigationModule[] = [
     key: 'acoes',
     label: 'Acoes',
     items: [
+      { key: 'acoes-planos', label: 'Planos de Acoes', path: '/planos-acoes' },
       { key: 'acoes-matriz', label: 'Matriz de Acoes', path: '/matriz-acoes' },
       { key: 'acoes-kanban', label: 'Kanban', path: '/matriz-acoes-kanban' }
     ]
